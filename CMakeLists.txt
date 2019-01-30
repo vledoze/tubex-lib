@@ -10,6 +10,7 @@
   set(PACKAGE_NAME       tubex-lib)
   set(PACKAGE_VERSION    "2.0")
   set(CMAKE_MODULE_PATH  "${PROJECT_SOURCE_DIR}/scripts/cmake_modules")
+  option(WITH_PYTHON     "build library with python bindings" ON)
 
   project(${PACKAGE_NAME})
 
@@ -19,6 +20,7 @@
   get_filename_component(TUBELIB_SRC_DIR   "./build" ABSOLUTE)
 
   #set(CMAKE_CXX_FLAGS ${CMAKE_CSS_FLAGS} "-DNDEBUG") # Comment for debug
+  #set(CMAKE_CXX_FLAGS ${CMAKE_CSS_FLAGS} "-fPIC")
 
 # IBEX-lib package
 
@@ -26,7 +28,9 @@
   include_directories(/usr/local/include/ibex/)
   include_directories(/usr/local/include/ibex/3rd/)
   #set(LIBS ${LIBS} -libex -lm -lgaol -lgdtoa -lultim) # using library Gaol
-  set(LIBS ${LIBS} -libex -lm -lprim) # using library Filib
+  set(LIB S${LIBS} -lm -lprim -libex) # using library Filib
+
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Sources
 
@@ -35,16 +39,23 @@
 
 # Tests
 
-  option(BUILD_TESTS "Build test" ON)
-  if(BUILD_TESTS)
-    enable_testing(true)
-    add_subdirectory(tests)
-    include(CTest)
-  endif()
+  #option(BUILD_TESTS "Build test" ON)
+  #if(BUILD_TESTS)
+  #  enable_testing(true)
+  #  add_subdirectory(tests)
+  #  include(CTest)
+  #endif()
 
 # Examples
 
-  add_subdirectory(examples)
+  #add_subdirectory(examples)
+
+# Python bindings (pyibex)
+
+  if(WITH_PYTHON)
+    add_subdirectory(pybind11)
+    add_subdirectory(python)
+  endif(WITH_PYTHON)
 
 # Uninstallation
 
