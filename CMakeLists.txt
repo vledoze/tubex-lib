@@ -61,10 +61,10 @@
 
 # Python bindings (pyibex)
 
-  #if(WITH_PYTHON)
-  #  add_subdirectory(pybind11)
-  #  add_subdirectory(python)
-  #endif(WITH_PYTHON)
+  if(WITH_PYTHON)
+    add_subdirectory(pybind11)
+    add_subdirectory(python)
+  endif(WITH_PYTHON)
 
 # Uninstallation
 
