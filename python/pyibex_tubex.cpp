@@ -26,7 +26,11 @@ using namespace tubex;
 using ibex::Interval;
 using ibex::IntervalVector;
 
+// see http://pybind11.readthedocs.io/en/latest/advanced.html#default-arguments-revisited
+
 PYBIND11_MODULE(tube, m)
 {
-  py::class_<Tube>(m, "Tube");
+  py::class_<Tube>(m, "Tube")
+    .def(init<const Interval&, const Interval&>(), py::arg("domain"), py::arg_t<ibex::Interval>("default_value", ibex::Interval::ALL_REALS, "ALL_REALS"))
+    ;
 }
