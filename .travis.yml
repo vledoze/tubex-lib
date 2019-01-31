@@ -2,8 +2,9 @@
 #  tubex-lib - travis script
 # ==================================================================
 
-language: cpp
+language: c++
 sudo: false
+
 matrix:
   include:
 #  - os: linux
@@ -32,7 +33,7 @@ matrix:
 #        packages: [g++-5, cmake, cmake-data, pkg-config, libboost-dev, libcppunit-dev]
   - os: linux
 #    language: python
-    env: PYTHON=3.6 CPP_VERSION=11 GCC=5
+    env: PYTHON=3.6 CPP_VERSION=11 GCC=5.0
     python: "3.6"
     addons:
       apt:
@@ -52,44 +53,47 @@ matrix:
 #  - "$HOME/ibex"
 #notifications:
 #  email: false
-before_install:
-#- export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$HOME/ibex
-- |
-  # Configure build variables
-  if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-    if [ -z "$GCC" ]; then export GCC=4.8; fi
-    export CXX=g++-$GCC CC=gcc-$GCC;
-  elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
-    export CXX=g++-$GCC CC=gcc-$GCC;
-  fi
-  if [ -n "$CPP_VERSION" ]; then export CPP_VERSION=-std=c++$CPP_VERSION; fi
-  if [ "${PYTHON:0:1}" = "3" ]; then export PY=3; fi
-  if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-      if [ "$PY" = "3" ]; then
-        pip install --upgrade pip auditwheel twine;
-      else
-        pip install --user --upgrade pip auditwheel twine;
-      fi
-  elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
-    brew update;
-    brew install gcc48;
-    if [ "$PY" = "3" ]; then
-      brew install python$PY;
-    else
-      curl -fsSL -O https://bootstrap.pypa.io/get-pip.py;
-      sudo -H python get-pip.py;
-    fi
-    pip$PY install --user --upgrade pip virtualenv auditwheel twine;
-    python$PY -m virtualenv venv;
-    source venv/bin/activate;
-  fi
 
 sudo: required
+
+
+#before_install:
+##- export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$HOME/ibex
+#- |
+#  # Configure build variables
+#  if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+#    if [ -z "$GCC" ]; then export GCC=4.8; fi
+#    export CXX=g++-$GCC CC=gcc-$GCC;
+#  elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
+#    export CXX=g++-$GCC CC=gcc-$GCC;
+#  fi
+#  if [ -n "$CPP_VERSION" ]; then export CPP_VERSION=-std=c++$CPP_VERSION; fi
+#  if [ "${PYTHON:0:1}" = "3" ]; then export PY=3; fi
+#  if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+#      if [ "$PY" = "3" ]; then
+#        pip install --upgrade pip auditwheel twine;
+#      else
+#        pip install --user --upgrade pip auditwheel twine;
+#      fi
+#  elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
+#    brew update;
+#    brew install gcc48;
+#    if [ "$PY" = "3" ]; then
+#      brew install python$PY;
+#    else
+#      curl -fsSL -O https://bootstrap.pypa.io/get-pip.py;
+#      sudo -H python get-pip.py;
+#    fi
+#    pip$PY install --user --upgrade pip virtualenv auditwheel twine;
+#    python$PY -m virtualenv venv;
+#    source venv/bin/activate;
+#  fi
 
 install:
 #- sh ./cmake/build_Ibex4pyIbex.sh
 - sudo sh ./scripts/ibex/build_IbexLib.sh
 - sudo sh ./scripts/ibex/build_IbexGeometryLib.sh
+
 script:
 - cd ${TRAVIS_BUILD_DIR}
 - echo ${TRAVIS_BUILD_DIR}
@@ -108,7 +112,8 @@ script:
         -DWITH_EXAMPLES=OFF 
         ${TRAVIS_BUILD_DIR}
 - make -j4
-- make pip_package
+- make test
+#- make pip_package
 
 #deploy:
 #  provider: releases
