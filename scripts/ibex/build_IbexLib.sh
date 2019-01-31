@@ -3,13 +3,22 @@
 # ==================================================================
 
 #!/bin/bash
-
 echo 'Installing the IBEX-lib...';
-git clone https://github.com/ibex-team/ibex-lib
-cd ibex-lib
-./waf configure --with-debug --interval-lib=filib
-sudo ./waf install
-cd ..
+
+  # CMake Ibex from Benoit Desrochers
+  git clone https://github.com/benEnsta/ibex-lib
+  cd ibex-lib
+  git checkout with_cmake_update_21012019
+  mkdir make ; cd make ; cmake .. ; make -j4 ; sudo make install
+
+  # # Master Ibex with waf install
+  # 
+  # git clone https://github.com/ibex-team/ibex-lib
+  # cd ibex-lib
+  # ./waf configure --with-debug --interval-lib=filib
+  # sudo ./waf install
+  # cd ..
+
 
 ##set -x # debugging
 #
