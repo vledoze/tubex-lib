@@ -22,7 +22,7 @@
   set(CMAKE_MODULE_PATH  "${TUBELIB_SCRIPTS_DIR}/cmake_modules/")
 
   #set(CMAKE_CXX_FLAGS ${CMAKE_CSS_FLAGS} "-DNDEBUG") # Comment for debug
-  #set(CMAKE_CXX_FLAGS ${CMAKE_CSS_FLAGS} "-fPIC")
+  set(CMAKE_CXX_FLAGS ${CMAKE_CSS_FLAGS} "-fPIC")
 
 # IBEX-lib package
 
