@@ -1,128 +1,70 @@
 # ==================================================================
-#  tubex-lib - travis script
+#  tubex-lib - travis test script
 # ==================================================================
 
 language: c++
 sudo: false
 
-matrix:
-  include:
-#  - os: linux
-#    language: pyhton
-#    env: PYTHON=2.7 CPP_VERSION=11 GCC=5
-#    python: "2.7"
-#    addons:
-#      apt:
-#        sources: [ubuntu-toolchain-r-test, kubuntu-backports, deadsnakes, george-edison55-precise-backports]
-#        packages: [g++-5, cmake, cmake-data, pkg-config, libboost-dev, libcppunit-dev]
-#  - os: linux
-#    language: python
-#    env: PYTHON=3.4 CPP_VERSION=11 GCC=5
-#    python: "3.4"
-#    addons:
-#      apt:
-#        sources: [ubuntu-toolchain-r-test, kubuntu-backports, deadsnakes, george-edison55-precise-backports]
-#        packages: [g++-5, cmake, cmake-data, pkg-config, libboost-dev, libcppunit-dev]
-#  - os: linux
-#    language: python
-#    env: PYTHON=3.5 CPP_VERSION=11 GCC=5
-#    python: "3.5"
-#    addons:
-#      apt:
-#        sources: [ubuntu-toolchain-r-test, kubuntu-backports, deadsnakes, george-edison55-precise-backports]
-#        packages: [g++-5, cmake, cmake-data, pkg-config, libboost-dev, libcppunit-dev]
-  - os: linux
-#    language: python
-    env: PYTHON=3.6 CPP_VERSION=11 GCC=5.0
-    python: "3.6"
-    addons:
-      apt:
-        sources: [ubuntu-toolchain-r-test, kubuntu-backports, deadsnakes, george-edison55-precise-backports]
-        packages: [g++-5, cmake, cmake-data, pkg-config, libboost-dev, libcppunit-dev]
-  # - os: osx
-  #   osx_image: xcode7.3
-  #   env: PYTHON=2.7 CPP_VERSION=11 GCC=4.8
-  # - os: osx
-  #   osx_image: xcode7.3
-  #   env: PYTHON=3.6 CPP_VERSION=11 GCC=4.8
-  # - os: osx
-  #   osx_image: xcode7.3
-  #   env: PYTHON=3.5 CPP_VERSION=11 GCC=4.8
-#cache:
-#  directories:
-#  - "$HOME/ibex"
-#notifications:
-#  email: false
+addons:
+  apt:
+    sources:
+    #- deadsnakes
+    #- ubuntu-toolchain-r-test
+    #- chef-current-precise
+    - ubuntu-toolchain-r-test
+    - kubuntu-backports
+    - deadsnakes
+    - george-edison55-precise-backports
 
+    packages:
+    - g++-5
+    - cmake
+    - cmake-data
+    - pkg-config
+    - libboost-dev
+    - libcppunit-dev
+    #- cmake
+    #- time
+    #- pkg-config
+    #- g++-5
+    #- libboost-dev
+    #- libcppunit-dev # for ibex with cmake
+    ##- doxygen # for documentation
+    
 sudo: required
 
+cache:
+  directories:
+  #- $HOME/ibex
+
+matrix:
+  include:
+  #- os: osx
+  #  compiler: clang
+  - os: linux
+    compiler: gcc-5
+    env: PYTHON=3.6 CPP_VERSION=11 GCC=5.0
+    python: "3.6"
 
 #before_install:
-##- export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$HOME/ibex
-#- |
-#  # Configure build variables
-#  if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-#    if [ -z "$GCC" ]; then export GCC=4.8; fi
-#    export CXX=g++-$GCC CC=gcc-$GCC;
-#  elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
-#    export CXX=g++-$GCC CC=gcc-$GCC;
-#  fi
-#  if [ -n "$CPP_VERSION" ]; then export CPP_VERSION=-std=c++$CPP_VERSION; fi
-#  if [ "${PYTHON:0:1}" = "3" ]; then export PY=3; fi
-#  if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-#      if [ "$PY" = "3" ]; then
-#        pip install --upgrade pip auditwheel twine;
-#      else
-#        pip install --user --upgrade pip auditwheel twine;
-#      fi
-#  elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
-#    brew update;
-#    brew install gcc48;
-#    if [ "$PY" = "3" ]; then
-#      brew install python$PY;
-#    else
-#      curl -fsSL -O https://bootstrap.pypa.io/get-pip.py;
-#      sudo -H python get-pip.py;
-#    fi
-#    pip$PY install --user --upgrade pip virtualenv auditwheel twine;
-#    python$PY -m virtualenv venv;
-#    source venv/bin/activate;
-#  fi
+#  - if [ $TRAVIS_OS_NAME == osx ]; then brew update && brew install clang-omp; fi
 
 install:
-#- sh ./cmake/build_Ibex4pyIbex.sh
-- sudo sh ./scripts/ibex/build_IbexLib.sh
-- sudo sh ./scripts/ibex/build_IbexGeometryLib.sh
+  - sudo sh ./scripts/ibex/build_IbexLib.sh
+  - sudo sh ./scripts/ibex/build_IbexGeometryLib.sh
+  #- sudo pip install breathe # for documentation
+  #- export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$HOME/ibex
 
 script:
-- cd ${TRAVIS_BUILD_DIR}
-- echo ${TRAVIS_BUILD_DIR}
-- mkdir -p build/build-release
-- cd build/build-release
-- cmake -DCMAKE_INSTALL_PREFIX=${HOME} 
-        #-DIBEX_ROOT=${HOME}/ibex 
-        -DCMAKE_CXX_COMPILER=g++-5 
-        -DPYBIND11_PYTHON_VERSION=$PYTHON 
-        -DPYBIND11_CPP_STANDARD=$CPP_VERSION 
-        -DCMAKE_BUILD_TYPE=RELEASE 
-        -DBUILD_TESTS=OFF 
-        -DWITH_PYTHON=ON 
-        -DWITH_3D=ON 
-        -DWITH_PYIBEX_VERSION=ON 
-        -DWITH_EXAMPLES=OFF 
-        ${TRAVIS_BUILD_DIR}
-- make -j4
-- make test
-#- make pip_package
-
-#deploy:
-#  provider: releases
-#  api_key:
-#    secure: NAXVYKKCCBMzCaHEsF9miYaKUMl2H7RZoniXdXx8de96emKsB8MHL2ItqJB+H8MaIr/h68f5KX4614oi6I3LLvI+H7V9clJ77sDR87ZMPmo/LX0rViW3Ijh4ZQ123xw+jtNJCBk9rON8TNNxM9CKmfrEdZjTM+S/48gqcFYDZdCMIPRAJolD2SPGT2eMx3PzKk8OW9te97QjIpRuG67KXV78zet5XGdhp9mQ6DMA+453XiyHb3rh26c9qGm9SFAQstLv0/OfOJ/GaZAKA1toUiJbnk2OAUhI0QUXIMhKH/fZzzajJTfr4rOL2CtDDp677cWmubqctPc8gfXBmu4hI9HV2+vtp7Gj0XP/NkUgv0zYjSnz929saFJ+dHpl3XenxIJkUj7coU8oDzsoKX/Uz5/yNCY1LXZvt7lAKa8j//qpMYUXfSTblSdClSnQ5oGG7nhpPlXVU90GLai1ACR3rI6CFeyuOZlZAG0OcpVA37pQJ18Zl+BIeR6Jsbu0FO3YQ/udQ0mC71++yXFpYnOExFNPAYd/na+JDaDQKf34/GK6x2z4/5qMaivjAtE65Og/ImzejOmw/pwmS47xOxfPRYnkeuSIxi/7a91vujqowIyhGk61knez4xOGlYzAAPG/u0zXVRY99gqVmzfZzcftc/flnyCzuZu4una1P0Pqalw=
-#  file_glob: true
-#  file: ${TRAVIS_BUILD_DIR}/build/build-release/pytubex-*.whl
-#  skip_cleanup: true
-#  overwrite: true
-#  on:
-#    repo: SimonRohou/tubex-lib
-#    tags: true
+  #- mkdir make
+  #- cd make
+  #- if [ $TRAVIS_OS_NAME == osx ]; then
+  #    CC=clang-omp CXX=clang-omp++ cmake -DCMAKE_INSTALL_PREFIX=${HOME} -DIBEX_ROOT=${HOME}/ibex -DBUILD_TESTS=ON ../ ;
+  #  fi
+  #- if [ $TRAVIS_OS_NAME == linux ]; then
+  #    cmake -DCMAKE_INSTALL_PREFIX=${HOME} -DIBEX_ROOT=${HOME}/ibex -DCMAKE_CXX_COMPILER=g++-5 -DBUILD_TESTS=ON ../ ;
+  #  fi
+  #- make
+  - ./build.sh
+  - cd make
+  - make test
