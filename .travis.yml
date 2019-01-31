@@ -6,32 +6,32 @@ language: cpp
 sudo: false
 matrix:
   include:
+#  - os: linux
+#    language: pyhton
+#    env: PYTHON=2.7 CPP_VERSION=11 GCC=5
+#    python: "2.7"
+#    addons:
+#      apt:
+#        sources: [ubuntu-toolchain-r-test, kubuntu-backports, deadsnakes, george-edison55-precise-backports]
+#        packages: [g++-5, cmake, cmake-data, pkg-config, libboost-dev, libcppunit-dev]
+#  - os: linux
+#    language: python
+#    env: PYTHON=3.4 CPP_VERSION=11 GCC=5
+#    python: "3.4"
+#    addons:
+#      apt:
+#        sources: [ubuntu-toolchain-r-test, kubuntu-backports, deadsnakes, george-edison55-precise-backports]
+#        packages: [g++-5, cmake, cmake-data, pkg-config, libboost-dev, libcppunit-dev]
+#  - os: linux
+#    language: python
+#    env: PYTHON=3.5 CPP_VERSION=11 GCC=5
+#    python: "3.5"
+#    addons:
+#      apt:
+#        sources: [ubuntu-toolchain-r-test, kubuntu-backports, deadsnakes, george-edison55-precise-backports]
+#        packages: [g++-5, cmake, cmake-data, pkg-config, libboost-dev, libcppunit-dev]
   - os: linux
-    language: pyhton
-    env: PYTHON=2.7 CPP_VERSION=11 GCC=5
-    python: "2.7"
-    addons:
-      apt:
-        sources: [ubuntu-toolchain-r-test, kubuntu-backports, deadsnakes, george-edison55-precise-backports]
-        packages: [g++-5, cmake, cmake-data, pkg-config, libboost-dev, libcppunit-dev]
-  - os: linux
-    language: python
-    env: PYTHON=3.4 CPP_VERSION=11 GCC=5
-    python: "3.4"
-    addons:
-      apt:
-        sources: [ubuntu-toolchain-r-test, kubuntu-backports, deadsnakes, george-edison55-precise-backports]
-        packages: [g++-5, cmake, cmake-data, pkg-config, libboost-dev, libcppunit-dev]
-  - os: linux
-    language: python
-    env: PYTHON=3.5 CPP_VERSION=11 GCC=5
-    python: "3.5"
-    addons:
-      apt:
-        sources: [ubuntu-toolchain-r-test, kubuntu-backports, deadsnakes, george-edison55-precise-backports]
-        packages: [g++-5, cmake, cmake-data, pkg-config, libboost-dev, libcppunit-dev]
-  - os: linux
-    language: python
+#    language: python
     env: PYTHON=3.6 CPP_VERSION=11 GCC=5
     python: "3.6"
     addons:
@@ -47,11 +47,11 @@ matrix:
   # - os: osx
   #   osx_image: xcode7.3
   #   env: PYTHON=3.5 CPP_VERSION=11 GCC=4.8
-cache:
+#cache:
 #  directories:
 #  - "$HOME/ibex"
-notifications:
-  email: false
+#notifications:
+#  email: false
 before_install:
 #- export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$HOME/ibex
 - |
