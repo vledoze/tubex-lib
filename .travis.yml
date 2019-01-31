@@ -18,8 +18,9 @@ addons:
     - pkg-config
     - g++-5
     - libboost-dev
+    - libcppunit-dev # for ibex with cmake
     #- doxygen # for documentation
-
+    
 sudo: required
 
 cache:
