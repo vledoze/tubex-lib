@@ -23,6 +23,7 @@ addons:
     - pkg-config
     - libboost-dev
     - libcppunit-dev
+    - python3.6
     #- cmake
     #- time
     #- pkg-config
