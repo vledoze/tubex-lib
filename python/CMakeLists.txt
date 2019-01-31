@@ -20,7 +20,7 @@
 
   set(pip_dir "${CMAKE_CURRENT_BINARY_DIR}/pip_package")
 
-  include_directories(.)
+  #include_directories(.)
 
   pybind11_add_module(tubex SHARED
     pyibex_tubex.cpp

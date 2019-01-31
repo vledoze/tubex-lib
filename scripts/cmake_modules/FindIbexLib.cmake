@@ -20,10 +20,11 @@ endif()
 set(IBEX_DEFINITIONS ${PC_IBEX_CFLAGS_OTHER})
 find_path(IBEX_INCLUDE_DIR ibex.h
           HINTS ${PC_IBEX_INCLUDEDIR} ${PC_IBEX_INCLUDE_DIRS} ${IBEX_ROOT}
-          PATH_SUFFIXES include include/ibex )
+          PATH_SUFFIXES include include/ibex)
 
 find_path(FILIB_INCLUDE_DIR ieee/primitive.hpp
-          HINTS ${PC_IBEX_INCLUDEDIR} ${PC_IBEX_INCLUDE_DIRS} ${IBEX_ROOT}
+          HINTS ${PC_IBEX_INCLUDEDIR} ${PC_IBEX_INCLUDE_DIRS} ${IBEX_ROOT} 
+          "/usr/local/include/ibex/3rd/"
           PATH_SUFFIXES include          
           )
 
@@ -35,11 +36,12 @@ find_library(IBEX_LIBRARY NAMES ibex
 
 find_library(FILIB_LIBRARY NAMES prim
             HINTS ${PC_IBEX_LIBDIR} ${PC_IBEX_LIBRARY_DIRS}  ${IBEX_ROOT}
+            "/usr/local/lib/ibex/3rd/"
             PATH_SUFFIXES lib
             )
 
 set(IBEX_LIBRARIES ${IBEX_LIBRARY} ${FILIB_LIBRARY})
-set(IBEX_INCLUDE_DIRS ${IBEX_INCLUDE_DIR} ${FILIB_INCLUDE_DIR})
+set(IBEX_INCLUDE_DIRS ${IBEX_INCLUDE_DIR} ${IBEX_INCLUDE_DIR}/ibex ${FILIB_INCLUDE_DIR})
 
 include(FindPackageHandleStandardArgs)
 # handle the QUIETLY and REQUIRED arguments and set IBEX_FOUND to TRUE
