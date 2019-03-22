@@ -49,7 +49,7 @@ namespace tubex
        *        contracts the tube \f$[\mathbf{x}](\cdot)\f$ with respect to its derivative \f$[\mathbf{v}](\cdot)\f$.
        *
        * \param x the n-dimensional tube \f$[\mathbf{x}](\cdot)\f$
-       * \param v the n-dimensional derivative tube \f$[\mathbf{v}](\cdot)\f$
+       * \param v the n-dimensional derivative tube \f$[\mathbf{}](v\cdot)\f$
        * \param t_propa an optional temporal way of propagation
        *                (forward or backward in time, both ways by default)
        */
