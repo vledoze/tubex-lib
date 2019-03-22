@@ -18,8 +18,8 @@ using namespace std;
 using namespace ibex;
 using namespace tubex;
 
-// This method applies a CtcFwdBwd on slices
-void ctc_fwdbwd_contract(Slice &x, Slice &v, ibex::CtcFwdBwd& ctc_fwdbwd);
+// This procedure applies a CtcFwdBwd on slices
+void ctc_fwdbwd_slices(Slice &x, Slice &v, ibex::CtcFwdBwd& ctc_fwdbwd);
 
 int main(int argc, char *argv[])
 {
@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
         do
         {
           sx_old = *sx; sv_old = *sv;
-          ctc_fwdbwd_contract(*sx, *sv, uctc_fwdbwd); // Cfwdbwd
+          ctc_fwdbwd_slices(*sx, *sv, uctc_fwdbwd);   // Cfwdbwd
           ctc_deriv.contract(*sx, *sv);               // Cd/dt
         } while(sx_old != *sx || sv_old != *sv);      // fixed point
 
@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
   return EXIT_SUCCESS;
 }
 
-void ctc_fwdbwd_contract(Slice &x, Slice &v, ibex::CtcFwdBwd& ctc_fwdbwd)
+void ctc_fwdbwd_slices(Slice &x, Slice &v, ibex::CtcFwdBwd& ctc_fwdbwd)
 {
   IntervalVector envelope(2);
   envelope[0] = x.codomain(); envelope[1] = v.codomain();
