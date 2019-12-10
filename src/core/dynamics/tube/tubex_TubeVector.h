@@ -41,6 +41,13 @@ namespace tubex
       /// @{
 
       /**
+       * \brief Creates an undefined n-dimensional tube
+       *
+       * \note Constructor necessary for the deserialize_TubeVector method
+       */
+      TubeVector();
+
+      /**
        * \brief Creates a n-dimensional tube \f$[\mathbf{x}](\cdot)\f$ made of one slice
        *
        * \param domain Interval domain \f$[t_0,t_f]\f$
@@ -1003,13 +1010,6 @@ namespace tubex
       static const TubeVector hull(const std::list<TubeVector>& l_tubes);
 
     protected:
-
-      /**
-       * \brief Creates an undefined n-dimensional tube
-       *
-       * \note Constructor necessary for the deserialize_TubeVector method
-       */
-      TubeVector();
 
       /**
        * \brief Returns the box \f$[\mathbf{x}]([t_0,t_f])\f$
