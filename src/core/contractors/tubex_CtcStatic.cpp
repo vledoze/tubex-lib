@@ -24,6 +24,9 @@ namespace tubex
   CtcStatic::~CtcStatic()
   {
 
+    // Suppression pointeurs
+    if(m_ibex_ctc != NULL)
+      delete m_ibex_ctc;
   }
 
   void CtcStatic::contract(TubeVector& x)
