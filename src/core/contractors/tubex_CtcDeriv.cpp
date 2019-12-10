@@ -25,16 +25,29 @@ namespace tubex
   {
     assert(x.domain() == v.domain());
     assert(Tube::same_slicing(x, v));
-    
+
+    Slice *x_slice = x.first_slice();
+    const Slice *v_slice = v.first_slice();
+
     if(t_propa & FORWARD)
     {
-      Slice *x_slice = x.first_slice();
-      const Slice *v_slice = v.first_slice();
 
       while(x_slice != NULL)
       {
         assert(v_slice != NULL);
-        contract(*x_slice, *v_slice, t_propa);
+
+        if(x_slice->domain().intersects(m_restricted_domain))
+        {
+          contract(*x_slice, *v_slice, t_propa);
+          // If current slide is in restricted domain
+          // Next slide must be in the restricted domain
+          // Or we stop
+          Slice *next_x_slice = x_slice->next_slice();
+          if (next_x_slice == NULL)
+            break;
+          if (!next_x_slice->domain().intersects(m_restricted_domain))
+            break;
+        }
         x_slice = x_slice->next_slice();
         v_slice = v_slice->next_slice();
       }
@@ -42,13 +55,23 @@ namespace tubex
     
     if(t_propa & BACKWARD)
     {
-      Slice *x_slice = x.last_slice();
-      const Slice *v_slice = v.last_slice();
 
       while(x_slice != NULL)
       {
         assert(v_slice != NULL);
-        contract(*x_slice, *v_slice, t_propa);
+
+        if(x_slice->domain().intersects(m_restricted_domain))
+        {
+          contract(*x_slice, *v_slice, t_propa);
+          // If current slide is in restricted domain
+          // Next slide must be in the restricted domain
+          // Or we stop
+          Slice *prev_x_slice = x_slice->prev_slice();
+          if (prev_x_slice == NULL)
+            break;
+          if (!prev_x_slice->domain().intersects(m_restricted_domain))
+            break;
+        }
         x_slice = x_slice->prev_slice();
         v_slice = v_slice->prev_slice();
       }
