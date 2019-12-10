@@ -26,6 +26,7 @@ namespace tubex
   {
     public:
 
+      Function(int n, const char* filename);
       Function(const char* y);
       Function(const char* x1, const char* y);
       Function(const char* x1, const char* x2, const char* y);
@@ -64,6 +65,7 @@ namespace tubex
 
     protected:
 
+      void construct_from_file(int n, const char* filename);
       void construct_from_array(int n, const char** x, const char* y);
 
       ibex::Function *m_ibex_f = NULL;

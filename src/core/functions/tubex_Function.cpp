@@ -17,6 +17,11 @@ using namespace ibex;
 
 namespace tubex
 {
+  Function::Function(int n, const char* filename)
+  {
+    construct_from_file(n, filename);
+  }
+
   Function::Function(int n, const char** x, const char* y)
   {
     construct_from_array(n, x, y);
@@ -145,6 +150,17 @@ namespace tubex
   const ibex::Function& Function::ibex_function() const
   {
     return *m_ibex_f;
+  }
+
+  void Function::construct_from_file(int n, const char* filename)
+  {
+    assert(n >= 0);
+    assert(filename != NULL && "filename must be defined");
+
+    m_ibex_f = new ibex::Function(filename);
+    m_nb_vars = n;
+    m_img_dim = m_ibex_f->image_dim();
+    m_is_intertemporal = false; // not supported yet
   }
 
   void Function::construct_from_array(int n, const char** x, const char* y)
