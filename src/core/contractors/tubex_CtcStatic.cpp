@@ -161,27 +161,31 @@ namespace tubex
         v_x_slices[i]->set_input_gate(ingate[i+m_dynamic_ctc]);
       }
 
-      if(v_x_slices[0]->next_slice() == NULL) // output gate
+      if(v_x_slices[0]->next_slice() != NULL)
       {
-        IntervalVector outgate(n + m_dynamic_ctc);
-
-        if(m_dynamic_ctc)
-          outgate[0] = v_x_slices[0]->domain().ub();
-
-        for(int i = 0 ; i < n ; i++)
-          outgate[i+m_dynamic_ctc] = v_x_slices[i]->output_gate();
-
-        m_ibex_ctc->contract(outgate);
-
-        for(int i = 0 ; i < n ; i++)
-          v_x_slices[i]->set_output_gate(outgate[i+m_dynamic_ctc]);
-
-        break; // end of contractions
+        if(v_x_slices[0]->next_slice()->domain().intersects(m_restricted_domain))
+        {
+          for(int i = 0 ; i < n ; i++)
+            v_x_slices[i] = v_x_slices[i]->next_slice();
+          continue;
+        }
       }
-      
-      else
-        for(int i = 0 ; i < n ; i++)
-          v_x_slices[i] = v_x_slices[i]->next_slice();
+
+      // end of contractions
+      IntervalVector outgate(n + m_dynamic_ctc);
+
+      if(m_dynamic_ctc)
+        outgate[0] = v_x_slices[0]->domain().ub();
+
+      for(int i = 0 ; i < n ; i++)
+        outgate[i+m_dynamic_ctc] = v_x_slices[i]->output_gate();
+
+      m_ibex_ctc->contract(outgate);
+
+      for(int i = 0 ; i < n ; i++)
+        v_x_slices[i]->set_output_gate(outgate[i+m_dynamic_ctc]);
+
+      break;
     }
   }
 }
