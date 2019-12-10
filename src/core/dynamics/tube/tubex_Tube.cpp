@@ -1054,6 +1054,13 @@ namespace tubex
       return *this;
     }
 
+    void Tube::shift_domain(double shift_ref)
+    {
+      for(Slice *s = first_slice() ; s != NULL ; s = s->next_slice())
+        s->shift_domain(shift_ref);
+      delete_synthesis_tree();
+    }
+
     // Bisection
     
     const pair<Tube,Tube> Tube::bisect(double t, float ratio) const
@@ -1238,7 +1245,7 @@ namespace tubex
         throw Exception("Tube::serialize()", "error while writing file \"" + binary_file_name + "\"");
 
       serialize_Tube(bin_file, *this, version_number);
-      char c; bin_file.write(&c, 1); // writing a bit to separate the two objects
+      char c = 0; bin_file.write(&c, 1); // writing a bit to separate the two objects
       serialize_Trajectory(bin_file, traj, version_number);
       bin_file.close();
     }
@@ -1316,7 +1323,8 @@ namespace tubex
 
       else
         traj = NULL;
-
+      
+      delete ptr;
       bin_file.close();
     }
 

@@ -275,7 +275,7 @@ namespace tubex
        * \brief Samples this tube at \f$t\f$
        *
        * \note Without any effect on one component that has two Slice objects
-       *       already defined at \f$t\f$ (if the gate \f$[x](t)\f$ already exists)
+       *       already defined at \f$t\f$ (if the gate \f$[\mathbf{x}](t)\f$ already exists)
        *
        * \param t the temporal key (double, must belong to the TubeVector domain)
        */
@@ -295,12 +295,32 @@ namespace tubex
        * \brief Samples this tube at \f$t\f$ with a specific gate value
        *
        * \note Without any effect on one component that has two Slice objects
-       *       already defined at \f$t\f$ (if the gate \f$[x](t)\f$ already exists)
+       *       already defined at \f$t\f$ (if the gate \f$[\mathbf{x}](t)\f$ already exists)
        *
        * \param t the temporal key (double, must belong to the TubeVector domain)
        * \param gate the IntervalVector value of this tube at \f$t\f$
        */
       void sample(double t, const ibex::IntervalVector& gate);
+
+      /**
+       * \brief Samples this tube so that each component will share the same
+       *        sampling of the scalar \f$[x](\cdot)\f$
+       *
+       * \note The previous sampling of this tube is preserved
+       *
+       * \param x the Tube from which the new sampling will come from
+       */
+      void sample(const Tube& x);
+
+      /**
+       * \brief Samples this tube so that its components will share the same
+       *        sampling of the components of the n-dimensional \f$[\mathbf{x}](\cdot)\f$
+       *
+       * \note The previous sampling of this tube is preserved
+       *
+       * \param x the TubeVector from which the new sampling will come from
+       */
+      void sample(const TubeVector& x);
 
       /// @}
       /// \name Accessing values
@@ -714,6 +734,13 @@ namespace tubex
        * \return *this
        */
       const TubeVector& inflate(const TrajectoryVector& rad);
+
+      /**
+       * \brief Shifts the domain \f$[t_0,t_f]\f$ of \f$[\mathbf{x}](\cdot)\f$
+       *
+       * \param a the offset value so that \f$[t_0,t_f]:=[t_0-a,t_f-a]\f$ 
+       */
+      void shift_domain(double a);
 
       /// @}
       /// \name Bisection

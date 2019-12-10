@@ -279,6 +279,21 @@ namespace tubex
         (*this)[i].sample(t, gate[i]);
     }
 
+    void TubeVector::sample(const Tube& x)
+    {
+      assert(domain() == x.domain());
+      for(int i = 0 ; i < size() ; i++)
+        (*this)[i].sample(x);
+    }
+
+    void TubeVector::sample(const TubeVector& x)
+    {
+      assert(domain() == x.domain());
+      assert(size() == x.size());
+      for(int i = 0 ; i < size() ; i++)
+        (*this)[i].sample(x[i]);
+    }
+
     // Accessing values
 
     const IntervalVector TubeVector::codomain() const
@@ -395,7 +410,7 @@ namespace tubex
         vector<Interval> v_t_i, v_t_new; \
         invert_method; \
         \
-        if(i > 0) \
+        if(i == 0) \
         { \
           v_t = v_t_i; \
           continue; \
@@ -650,6 +665,12 @@ namespace tubex
         (*this)[i].inflate(rad[i]);
     }
 
+    void TubeVector::shift_domain(double shift_ref)
+    {
+      for(int i = 0 ; i < size() ; i++)
+        (*this)[i].shift_domain(shift_ref);
+    }
+
     // Bisection
     
     const pair<TubeVector,TubeVector> TubeVector::bisect(double t, float ratio) const
@@ -801,7 +822,7 @@ namespace tubex
         throw Exception("TubeVector::serialize()", "error while writing file \"" + binary_file_name + "\"");
 
       serialize_TubeVector(bin_file, *this, version_number);
-      char c; bin_file.write(&c, 1); // writing a bit to separate the two objects
+      char c = 0; bin_file.write(&c, 1); // writing a bit to separate the two objects
       serialize_TrajectoryVector(bin_file, traj, version_number);
       bin_file.close();
     }
@@ -868,6 +889,7 @@ namespace tubex
       else
         traj = NULL;
 
+      delete ptr;
       bin_file.close();
     }
 }

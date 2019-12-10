@@ -9,8 +9,7 @@
   set(CMAKE_CXX_STANDARD  11)
   set(PACKAGE_NAME        tubex-lib)
   set(PACKAGE_VERSION     "2.0")
-  set(CMAKE_CXX_COMPILER  g++-5)
-  #set(CMAKE_CXX_FLAGS    ${CMAKE_CSS_FLAGS} "-DNDEBUG") # comment for debug
+  #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG") # comment for debug
 
   project(${PACKAGE_NAME})
 
@@ -73,6 +72,8 @@
              COMMAND ${TUBELIB_EXAMPLE_DIR}/robotics/ex_05_loops_detec/make/rob_05_loops_detec ${TUBELIB_DATA_DIR}/redermor/gesmi.txt 0)
     add_test(NAME robotics_06
              COMMAND ${TUBELIB_EXAMPLE_DIR}/robotics/ex_06_loops_proofs/make/rob_06_loops_proofs 0)
+    add_test(NAME robotics_07
+             COMMAND ${TUBELIB_EXAMPLE_DIR}/robotics/ex_07_dynloc/make/rob_07_dynloc 0)
 
     # Solver
     add_test(NAME solver_01

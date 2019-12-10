@@ -70,6 +70,23 @@ namespace tubex
     show();
   }
 
+  void VIBesFigMap::set_tube_max_nb_disp_slices(int max)
+  {
+    assert(max > 0);
+    m_tube_max_nb_disp_slices = max;
+  }
+
+  void VIBesFigMap::set_traj_max_nb_disp_points(int max)
+  {
+    assert(max > 0);
+    m_traj_max_nb_disp_points = max;
+  }
+
+  void VIBesFigMap::smooth_tube_drawing(bool smooth)
+  {
+    m_smooth_drawing = smooth;
+  }
+
   void VIBesFigMap::add_tube(const TubeVector *tube, const string& name, int index_x, int index_y)
   {
     assert(tube != NULL);
@@ -377,7 +394,7 @@ namespace tubex
 
     else
     {
-      for(double t = traj->domain().lb() ; t <= traj->domain().ub() ; t+=traj->domain().diam()/TRAJMAP_NB_DISPLAYED_POINTS)
+      for(double t = traj->domain().lb() ; t <= traj->domain().ub() ; t+=traj->domain().diam()/m_traj_max_nb_disp_points)
       {
         double x = (*traj)[index_x](t);
         double y = (*traj)[index_y](t);
@@ -428,7 +445,7 @@ namespace tubex
       && "unknown tube, must be added beforehand");
 
     // Reduced number of slices:
-    int step = max((int)(tube->nb_slices() / MAP_SLICES_NUMBER_TO_DISPLAY), 1);
+    int step = max((int)((1. * tube->nb_slices()) / m_tube_max_nb_disp_slices), 1);
 
     // 1. Background:
     if(m_draw_tubes_backgrounds)
@@ -443,14 +460,38 @@ namespace tubex
       if(m_map_tubes[tube].tube_x_copy != NULL)
       {
         string color = DEFAULT_MAPBCKGRND_COLOR;
+        IntervalVector prev_box(2); // used for diff or polygon display
 
         for(int k = 0 ; k < m_map_tubes[tube].tube_x_copy->nb_slices() ;
             k += step * 2) // less slices for the background
         {
+          if(!(*m_map_tubes[tube].tube_x_copy).slice(k)->domain().intersects(m_restricted_tdomain))
+            continue;
+
           IntervalVector box(2);
           box[0] = (*m_map_tubes[tube].tube_x_copy)(k);
           box[1] = (*m_map_tubes[tube].tube_y_copy)(k);
-          draw_box(box, color, params);
+
+          if(m_smooth_drawing)
+          {
+            // Display using polygons
+            if(!prev_box.is_unbounded())
+            {
+              vector<Point> v_pts;
+              push_points(box, v_pts);
+              push_points(prev_box, v_pts);
+              ConvexPolygon p(v_pts, false);
+              draw_polygon(p, color, params);
+            }
+          }
+
+          else
+          {
+            // Displaying tube's slices
+            draw_box(box, color, params);
+          }
+
+          prev_box = box;
         }
       }
     }
@@ -480,7 +521,7 @@ namespace tubex
 
       int k0, kf, kstep;
       bool from_first_to_last = m_map_tubes[tube].from_first_to_last;
-      IntervalVector prev_box(2); // used for diff display
+      IntervalVector prev_box(2); // used for diff or polygon display
 
       if(from_first_to_last) // Drawing from last to first box
       {
@@ -498,6 +539,9 @@ namespace tubex
           (from_first_to_last && k <= kf) || (!from_first_to_last && k >= kf) ;
           k+= from_first_to_last ? max(1,min(step,kf-k)) : -max(1,min(step,k)))
       {
+        if(!(*tube)[0].slice(k)->domain().intersects(m_restricted_tdomain))
+          continue;
+
         IntervalVector box(2);
         box[0] = (*tube)[m_map_tubes[tube].index_x](k);
         box[1] = (*tube)[m_map_tubes[tube].index_y](k);
@@ -509,24 +553,41 @@ namespace tubex
           color = color + "[" + color + "]";
         }
 
-        if(!color_map->is_opaque() && k != k0)
+        if(m_smooth_drawing)
         {
-          IntervalVector* diff_list;
-          int nb_box = box.diff(prev_box, diff_list);
-
-          for (int i = 0; i < nb_box; i++ )
-            draw_box(*(diff_list+i), color, params);
-
-          delete[] diff_list;
+          // Display using polygons
+          if(!prev_box.is_unbounded())
+          {
+            vector<Point> v_pts;
+            push_points(box, v_pts);
+            push_points(prev_box, v_pts);
+            ConvexPolygon p(v_pts, false);
+            draw_polygon(p, color, params);
+          }
         }
 
         else
-          draw_box(box, color, params);
+        {
+          // Displaying tube's slices
+          if(!color_map->is_opaque() && k != k0)
+          {
+            IntervalVector* diff_list;
+            int nb_box = box.diff(prev_box, diff_list);
+
+            for (int i = 0; i < nb_box; i++ )
+              draw_box(*(diff_list+i), color, params);
+
+            delete[] diff_list;
+          }
+
+          else
+            draw_box(box, color, params);
+        }
 
         prev_box = box;
       }
       
-      IntervalVector first_box(2);
+      /*IntervalVector first_box(2);
       double tlb = (m_restricted_tdomain & tube->domain()).lb();
       first_box[0] = (*tube)[m_map_tubes[tube].index_x](tlb);
       first_box[1] = (*tube)[m_map_tubes[tube].index_y](tlb);
@@ -536,11 +597,16 @@ namespace tubex
       double tub = (m_restricted_tdomain & tube->domain()).ub();
       last_box[0] = (*tube)[m_map_tubes[tube].index_x](tub);
       last_box[1] = (*tube)[m_map_tubes[tube].index_y](tub);
-      draw_box(last_box, "#47A040[]", params); // green
+      draw_box(last_box, "#47A040[]", params); // green*/
     }
   }
 
-  void VIBesFigMap::draw_vehicle(double t, const TrajectoryVector *traj, const vibes::Params& params)
+  void VIBesFigMap::draw_vehicle(double t, const TrajectoryVector *traj, float size)
+  {
+    draw_vehicle(t, traj, vibesParams("figure", name()), size);
+  }
+
+  void VIBesFigMap::draw_vehicle(double t, const TrajectoryVector *traj, const vibes::Params& params, float size)
   {
     assert(traj != NULL);
     assert(m_map_trajs.find(traj) != m_map_trajs.end()
@@ -571,7 +637,8 @@ namespace tubex
       robot_heading = (*traj)[m_map_trajs[traj].index_heading](t);
     }
 
-    vibes::drawAUV(robot_x, robot_y, robot_heading * 180. / M_PI, m_robot_size, "gray[yellow]", params);
+    float robot_size = size == -1 ? m_robot_size : size;
+    vibes::drawAUV(robot_x, robot_y, robot_heading * 180. / M_PI, robot_size, "black[yellow]", params);
   }
 
   void VIBesFigMap::draw_beacon(const Beacon& beacon, const string& color, const vibes::Params& params)
@@ -590,17 +657,24 @@ namespace tubex
 
   void VIBesFigMap::draw_observation(const IntervalVector& obs, const TrajectoryVector *traj, const string& color, const vibes::Params& params)
   {
-    assert(obs.size() == 3);
+    assert(obs.size() >= 3);
     assert(traj != NULL);
     assert(m_map_trajs.find(traj) != m_map_trajs.end()
       && "unknown traj, must be added beforehand");
 
     vibes::newGroup("obs", DEFAULT_OBS_COLOR, vibesParams("figure", name()));
-    vector<double> v_x, v_y;
-    v_x.push_back((*traj)[m_map_trajs[traj].index_x](obs[0].mid()));
-    v_y.push_back((*traj)[m_map_trajs[traj].index_y](obs[0].mid()));
-    v_x.push_back(v_x[0] + std::cos(obs[2].mid()) * obs[1].mid());
-    v_y.push_back(v_y[0] + std::sin(obs[2].mid()) * obs[1].mid());
-    draw_line(v_x, v_y, color, params);
+
+    double x = (*traj)[m_map_trajs[traj].index_x](obs[0].mid());
+    double y = (*traj)[m_map_trajs[traj].index_y](obs[0].mid());
+
+    vibes::drawPie(x, y,
+                   0.001, obs[1].mid(),
+                   obs[2].lb() * 180. / M_PI, obs[2].ub() * 180. / M_PI,
+                   "#000"/*#B9B9B9*/, vibesParams("figure", name(), "group", "obs"));
+
+    vibes::drawPie(x, y,
+                   obs[1].lb(), obs[1].ub(),
+                   obs[2].lb() * 180. / M_PI, obs[2].ub() * 180. / M_PI,
+                   "#000[#ffffff]"/*#B9B9B9[#DCDCDC]*/, vibesParams("figure", name(), "group", "obs"));
   }
 }
