@@ -404,6 +404,16 @@ namespace tubex
       void set_envelope(const ibex::Interval& envelope);
 
       /**
+       * \brief Sets the interval value of this slice as an intersection with a given
+       *        interval: \f$\forall t, \llbracket x\rrbracket(t)&=[y]\f$
+       *
+       * \note The gates may be contracted if the new envelope is not their superset
+       *
+       * \param y Interval value of the slice
+       */
+      void set_inter(const ibex::Interval& y);
+
+      /**
        * \brief Sets the interval value of the input gate of this slice
        *
        * \note The value to be set will be intersected by the envelopes of the related slices

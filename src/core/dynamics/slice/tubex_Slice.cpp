@@ -422,6 +422,26 @@ namespace tubex
       }
     }
 
+    void Slice::set_inter(const Interval& y)
+    {
+      assert(m_codomain.intersects(y));
+      m_codomain &= y;
+
+      *m_input_gate &= m_codomain;
+      if(prev_slice() != NULL)
+        *m_input_gate &= prev_slice()->codomain();
+
+      *m_output_gate &= m_codomain;
+      if(next_slice() != NULL)
+        *m_output_gate &= next_slice()->codomain();
+
+      if(m_synthesis_reference != NULL)
+      {
+        m_synthesis_reference->request_values_update();
+        m_synthesis_reference->request_integrals_update();
+      }
+    }
+
     void Slice::set_input_gate(const Interval& input_gate)
     {
       *m_input_gate = input_gate;

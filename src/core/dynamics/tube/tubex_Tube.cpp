@@ -969,6 +969,25 @@ namespace tubex
       }
     }
 
+    void Tube::set_inter(const Interval& y, const Interval& t)
+    {
+      assert(domain().is_superset(t));
+
+      if(t.is_degenerated())
+        set(y, t.lb());
+
+      else
+      {
+        sample(t.lb());
+        sample(t.ub());
+
+        for(Slice *s = slice(input2index(t.lb())) ;
+            s != NULL && !(t & s->domain()).is_degenerated() ;
+            s = s->next_slice())
+          s->set_inter(y);
+      }
+    }
+
     void Tube::del_first_slices(double t)
     {
       assert(domain().contains(t));

@@ -725,6 +725,19 @@ namespace tubex
       void set(const ibex::Interval& y, const ibex::Interval& t);
 
       /**
+       * \brief Sets the interval value of this tube over \f$[t]\f$ as an intersection with \f$[y]\f$:
+       *        \f$\forall t\in[t], [x](t)&=[y]\f$
+       *
+       * \note It may create two gates (and so further slices) if the tube
+       *       is not already sampled at \f$t^-\f$ and \f$t^+\f$. This is
+       *       done to ensure that \f$\forall t\in[t], [x](t)=[y]\f$.
+       *
+       * \param y Interval value to be set
+       * \param t the subdomain (Interval, must be a subset of the Tube domain)
+       */
+      void set_inter(const ibex::Interval& y, const ibex::Interval& t);
+
+      /**
        * \brief Delete all the slices before the slice which domain contains \f$t\f$
        *
        * \note Speeds up computation for real time applications, because we reduce
