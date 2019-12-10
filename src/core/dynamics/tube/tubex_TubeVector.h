@@ -15,6 +15,7 @@
 #include <map>
 #include <list>
 #include <vector>
+#include "tubex_Tube.h"
 #include "tubex_Fnc.h"
 #include "tubex_TrajectoryVector.h"
 #include "tubex_arithmetic.h"
