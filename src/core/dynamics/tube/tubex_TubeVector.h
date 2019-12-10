@@ -281,6 +281,16 @@ namespace tubex
       void sample(double t);
 
       /**
+       * \brief Samples this tube at \f$t.lb()\f$ and  \f$t.ub()\f$
+       *
+       * \note Without any effect on one component that has two Slice objects
+       *       already defined at a given \f$t\f$ (if the gate \f$[x](t)\f$ already exists)
+       *
+       * \param t the temporal domain (Interval, must belong to the TubeVector domain)
+       */
+      void sample(const ibex::Interval& t);
+
+      /**
        * \brief Samples this tube at \f$t\f$ with a specific gate value
        *
        * \note Without any effect on one component that has two Slice objects

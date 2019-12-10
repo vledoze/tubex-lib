@@ -264,6 +264,13 @@ namespace tubex
         (*this)[i].sample(t);
     }
 
+    void TubeVector::sample(const ibex::Interval& t)
+    {
+      assert(domain().is_superset(t));
+      for(int i = 0 ; i < size() ; i++)
+        (*this)[i].sample(t);
+    }
+
     void TubeVector::sample(double t, const IntervalVector& gate)
     {
       assert(domain().contains(t));

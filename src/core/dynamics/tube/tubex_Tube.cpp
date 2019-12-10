@@ -475,6 +475,11 @@ namespace tubex
       }
     }
 
+    void Tube::sample(const ibex::Interval& t) {
+      sample(t.lb());
+      sample(t.ub());
+    }
+
     void Tube::sample(double t, const Interval& gate)
     {
       assert(domain().contains(t));
