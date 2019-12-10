@@ -618,6 +618,12 @@ namespace tubex
         (*this)[i].set(y[i], t);
     }
 
+    void TubeVector::del_first_slices(double t)
+    {
+      for(int i = 0 ; i < size() ; i++)
+        (*this)[i].del_first_slices(t);
+    }
+
     void TubeVector::set_empty()
     {
       for(int i = 0 ; i < size() ; i++)

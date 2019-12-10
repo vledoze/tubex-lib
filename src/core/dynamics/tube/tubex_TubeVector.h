@@ -676,6 +676,17 @@ namespace tubex
       void set(const ibex::IntervalVector& y, const ibex::Interval& t);
 
       /**
+       * \brief Delete all the slices before the slice which domain contains \f$t\f$
+       *
+       * \note Speeds up computation for real time applications, because we reduce
+       *       the time to find a given slice. Might be better to use a sliding window
+       *       technic.
+       *
+       * \param time to find the new first slice
+       */
+      void del_first_slices(double t);
+
+      /**
        * \brief Sets this tube to the empty set
        *
        * \note By convention, all slices will be set to the empty set

@@ -969,6 +969,29 @@ namespace tubex
       }
     }
 
+    void Tube::del_first_slices(double t)
+    {
+      assert(domain().contains(t));
+
+      Slice *slice = first_slice();
+      int i = 0;
+      while(slice != NULL)
+      {
+        if(slice->domain().contains(t))
+          break;
+        Slice *next_slice = slice->next_slice();
+        delete slice;
+        slice = next_slice;
+        i++;
+      }
+      m_first_slice = slice;
+      delete_synthesis_tree();
+
+      // Creating new structure
+      if(m_enable_synthesis)
+        create_synthesis_tree();
+    }
+
     void Tube::set_empty()
     {
       set(Interval::EMPTY_SET);
