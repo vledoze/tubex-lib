@@ -1,0 +1,13 @@
+function fun_matT(
+    gyr_x, gyr_y, gyr_z,
+    cos_psi, sin_psi,
+    cos_tht, sin_tht,
+    cos_phi, sin_phi)
+
+  return (
+    (cos_psi*sin_tht/cos_tht)*gyr_x + (sin_psi*sin_tht/cos_tht)*gyr_y + gyr_z;
+    (-sin_psi)*gyr_x + (cos_psi)*gyr_y;
+    (cos_psi/cos_tht)*gyr_x + (sin_psi/cos_tht)*gyr_y
+  );
+
+end

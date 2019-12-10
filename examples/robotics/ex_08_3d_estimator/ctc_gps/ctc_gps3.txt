@@ -1,0 +1,11 @@
+Variables
+  pos_lat, pos_lon, pos_alt, pos_e, pos_n, pos_u, pos_lat0, pos_lon0, pos_alt0;
+
+Constraints
+  // Différence de coordonnées
+  dlt_alt = pos_alt - pos_alt0;
+
+  // ENU coordinates
+  dlt_alt = pos_u;
+
+end

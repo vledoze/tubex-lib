@@ -1,0 +1,13 @@
+Constants
+  mag_u = -40.0;
+
+Variables
+  mag_a, mag_b, mag_c, cos_psi, sin_psi, cos_tht, sin_tht, cos_phi, sin_phi;
+
+Constraints
+  r31 = -sin_tht;
+  r32 =  cos_tht*sin_phi;
+  r33 =  cos_tht*cos_phi;
+
+  r31*mag_a + r32*mag_b + r33*mag_c = mag_u;
+end

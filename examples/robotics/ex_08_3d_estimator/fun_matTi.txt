@@ -1,0 +1,13 @@
+function fun_matTi(
+    dpsi, dtht, dphi,
+    cos_psi, sin_psi,
+    cos_tht, sin_tht,
+    cos_phi, sin_phi)
+
+  return (
+    (-sin_psi)*dtht + (cos_tht*cos_psi)*dphi;
+    ( cos_psi)*dtht + (cos_tht*sin_psi)*dphi;
+    dpsi - sin_tht*dphi
+  );
+
+end

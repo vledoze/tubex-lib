@@ -1,0 +1,15 @@
+Constants
+  acc_e = 0.0;
+  acc_n = 0.0;
+  acc_u = 9.81;
+
+Variables
+  acc_a, acc_b, acc_c, cos_psi, sin_psi, cos_tht, sin_tht, cos_phi, sin_phi;
+
+Constraints
+  r13 =  sin_psi*sin_phi + sin_tht*cos_psi*cos_phi;
+  r23 = -cos_psi*sin_phi + sin_tht*cos_phi*sin_psi;
+  r33 =  cos_tht*cos_phi;
+
+  r13*acc_e + r23*acc_n + r33*acc_u = acc_c;
+end

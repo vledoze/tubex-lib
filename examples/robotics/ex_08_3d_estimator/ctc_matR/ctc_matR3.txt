@@ -1,0 +1,10 @@
+Variables
+  x, y, z, cos_psi, sin_psi, cos_tht, sin_tht, cos_phi, sin_phi;
+
+Constraints
+  r31 = -sin_tht;
+  r32 =  cos_tht*sin_phi;
+  r33 =  cos_tht*cos_phi;
+
+  r31^2 + r32^2 + r33^2 = 1.0;
+end

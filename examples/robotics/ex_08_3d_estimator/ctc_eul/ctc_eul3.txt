@@ -1,0 +1,6 @@
+Variables
+  x, y, z, cos_psi, sin_psi, cos_tht, sin_tht, cos_phi, sin_phi;
+
+Constraints
+  cos_phi^2 + sin_phi^2 = 1.0;
+end

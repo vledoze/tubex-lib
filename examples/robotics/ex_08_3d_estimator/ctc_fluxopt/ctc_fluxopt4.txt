@@ -1,0 +1,10 @@
+Variables
+  vit_a, vit_b, vit_c, cos_psi, sin_psi, cos_tht, sin_tht, cos_phi, sin_phi, vit_e, vit_n, vit_u;
+
+Constraints
+  r11 =  cos_tht*cos_psi;
+  r12 = -cos_phi*sin_psi + sin_tht*cos_psi*sin_phi;
+  r13 =  sin_psi*sin_phi + sin_tht*cos_psi*cos_phi;
+
+  r11*vit_a + r12*vit_b + r13*vit_c = vit_e;
+end

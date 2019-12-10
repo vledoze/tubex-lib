@@ -1,0 +1,13 @@
+Constants
+  mag_n =  20.0;
+
+Variables
+  mag_a, mag_b, mag_c, cos_psi, sin_psi, cos_tht, sin_tht, cos_phi, sin_phi;
+
+Constraints
+  r21 =  cos_tht*sin_psi;
+  r22 =  cos_psi*cos_phi+sin_tht*sin_psi*sin_phi;
+  r23 = -cos_psi*sin_phi+sin_tht*cos_phi*sin_psi;
+
+  r21*mag_a + r22*mag_b + r23*mag_c = mag_n;
+end

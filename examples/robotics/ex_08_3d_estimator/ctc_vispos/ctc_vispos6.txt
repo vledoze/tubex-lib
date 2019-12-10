@@ -1,0 +1,12 @@
+Variables
+  pos_x, pos_y, pos_z, pos_e, pos_n, pos_u, cos_psi0, sin_psi0, cos_tht0, sin_tht0, cos_phi0, sin_phi0, pos_e0, pos_n0, pos_u0;
+
+Constraints
+  r31 = -sin_tht0;
+  r32 =  cos_tht0*sin_phi0;
+  r33 =  cos_tht0*cos_phi0;
+  
+  err_pos_u = pos_u - pos_u0;
+
+  r31*pos_x + r32*pos_y + r33*pos_z = err_pos_u;
+end

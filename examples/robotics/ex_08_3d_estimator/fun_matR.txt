@@ -1,0 +1,23 @@
+function fun_matR(
+    x, y, z,
+    cos_psi, sin_psi,
+    cos_tht, sin_tht,
+    cos_phi, sin_phi)
+
+  r11 =  cos_tht*cos_psi;
+  r12 = -cos_phi*sin_psi + sin_tht*cos_psi*sin_phi;
+  r13 =  sin_psi*sin_phi + sin_tht*cos_psi*cos_phi;
+  r21 =  cos_tht*sin_psi;
+  r22 =  cos_psi*cos_phi+sin_tht*sin_psi*sin_phi;
+  r23 = -cos_psi*sin_phi+sin_tht*cos_phi*sin_psi;
+  r31 = -sin_tht;
+  r32 =  cos_tht*sin_phi;
+  r33 =  cos_tht*cos_phi;
+
+  return (
+    r11*x + r12*y + r13*z;
+    r21*x + r22*y + r23*z;
+    r31*x + r32*y + r33*z
+  );
+
+end

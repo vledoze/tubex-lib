@@ -1,0 +1,25 @@
+Constants
+  // Variables terre ellipsoide
+  RT = 637100.0;   // Rayon terrestre (meters)
+  RTA = 6378100.0; // Demi rayon terrestre majeur (meters)
+  RTB = 6371000.0; // Demi rayon terrestre mineur (meters)
+  a2 = RTA*RTA;
+  b2 = RTB*RTB;
+  e2 = 1.0 - b2/a2;
+
+Variables
+  pos_lat, pos_lon, pos_alt, pos_e, pos_n, pos_u, pos_lat0, pos_lon0, pos_alt0;
+
+Constraints
+
+  // Variables terre ellipsoid
+  k = 1.0 - e2*(sin(pos_lat)^2);
+  n = 1.0/sqrt(k)*RTA; //Prime vertical radius of curvature
+
+  // Différence de coordonnées
+  dlt_lon = pos_lon - pos_lon0;
+
+  // ENU coordinates
+  (n + pos_alt)*cos(pos_lat)*dlt_lon = pos_e;
+
+end

@@ -1,0 +1,13 @@
+Constants
+  mag_e = -5.0;
+
+Variables
+  mag_a, mag_b, mag_c, cos_psi, sin_psi, cos_tht, sin_tht, cos_phi, sin_phi;
+
+Constraints
+  r11 =  cos_tht*cos_psi;
+  r12 = -cos_phi*sin_psi + sin_tht*cos_psi*sin_phi;
+  r13 =  sin_psi*sin_phi + sin_tht*cos_psi*cos_phi;
+
+  r11*mag_a + r12*mag_b + r13*mag_c = mag_e;
+end
