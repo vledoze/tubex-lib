@@ -2,10 +2,34 @@
 #  tubex-lib / tests - cmake configuration file
 # ==================================================================
 
-  file(GLOB_RECURSE TESTS_SOURCES "tests_*.cpp")
-  set(TESTS_SOURCES ${TESTS_SOURCES} main.cpp)
+  set(TESTS_NAME tubex-tests-core)
 
-  add_executable(tubelib_tests_core ${TESTS_SOURCES})
-  target_link_libraries(tubelib_tests_core ${IBEX_LIBRARY} tubex-core)
+  list(APPEND SRC_TESTS ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
+                        ${CMAKE_CURRENT_SOURCE_DIR}/tests_predefined_tubes.cpp
+                        ${CMAKE_CURRENT_SOURCE_DIR}/tests_predefined_tubes.h
+                        ${CMAKE_CURRENT_SOURCE_DIR}/tests_arithmetic.cpp
+                        ${CMAKE_CURRENT_SOURCE_DIR}/tests_cn.cpp
+                        ${CMAKE_CURRENT_SOURCE_DIR}/tests_ctc_delay.cpp
+                        ${CMAKE_CURRENT_SOURCE_DIR}/tests_ctc_deriv.cpp
+                        ${CMAKE_CURRENT_SOURCE_DIR}/tests_ctc_eval.cpp
+                        ${CMAKE_CURRENT_SOURCE_DIR}/tests_ctc_picard.cpp
+                        ${CMAKE_CURRENT_SOURCE_DIR}/tests_definition.cpp
+                        ${CMAKE_CURRENT_SOURCE_DIR}/tests_functions.cpp
+                        ${CMAKE_CURRENT_SOURCE_DIR}/tests_integration.cpp
+                        ${CMAKE_CURRENT_SOURCE_DIR}/tests_operators.cpp
+                        ${CMAKE_CURRENT_SOURCE_DIR}/tests_geometry.cpp
+                        ${CMAKE_CURRENT_SOURCE_DIR}/tests_polygons.cpp
+                        ${CMAKE_CURRENT_SOURCE_DIR}/tests_serialization.cpp
+                        ${CMAKE_CURRENT_SOURCE_DIR}/tests_slices_structure.cpp
+                        ${CMAKE_CURRENT_SOURCE_DIR}/tests_trajectory.cpp
+                        ${CMAKE_CURRENT_SOURCE_DIR}/tests_values.cpp
+                        )
 
-  add_test(NAME Test COMMAND tubelib_tests_core)
+  add_executable(${TESTS_NAME} ${SRC_TESTS})
+  # todo: find a clean way to access tubex header files?
+  set(TUBEX_HEADERS_DIR ${CMAKE_CURRENT_BINARY_DIR}/../../include)
+  target_include_directories(${TESTS_NAME} SYSTEM PUBLIC ${TUBEX_HEADERS_DIR}
+                                                         ${CMAKE_CURRENT_SOURCE_DIR}/../catch)
+  target_link_libraries(${TESTS_NAME} PUBLIC Ibex::ibex tubex)
+  add_dependencies(check ${TESTS_NAME})
+  add_test(NAME ${TESTS_NAME} COMMAND ${TESTS_NAME})

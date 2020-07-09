@@ -3,7 +3,7 @@
  * ----------------------------------------------------------------------------
  *  \date       2018
  *  \author     Simon Rohou
- *  \copyright  Copyright 2019 Simon Rohou
+ *  \copyright  Copyright 2020 Simon Rohou
  *  \license    This program is distributed under the terms of
  *              the GNU Lesser General Public License (LGPL).
  */
@@ -19,8 +19,8 @@ namespace tubex
     : m_tube_ref(tube), m_parent(NULL)
   {
     assert(tube != NULL);
-    assert(k0 >= 0 && k0 < v_tube_slices.size());
-    assert(kf >= 0 && kf < v_tube_slices.size());
+    assert(k0 >= 0 && k0 < (int)v_tube_slices.size()); // todo: use size_t
+    assert(kf >= 0 && kf < (int)v_tube_slices.size()); // todo: use size_t
 
     if(k0 == kf) // leaf, pointer to a slice
     {
@@ -28,7 +28,7 @@ namespace tubex
       m_second_subtree = NULL;
       m_slice_ref = v_tube_slices[k0];
       m_slice_ref->m_synthesis_reference = this;
-      m_domain = m_slice_ref->domain();
+      m_tdomain = m_slice_ref->tdomain();
       m_nb_slices = 1;
     }
 
@@ -52,7 +52,7 @@ namespace tubex
       else
         m_second_subtree = NULL;
 
-      m_domain = m_first_subtree->domain() | m_second_subtree->domain();
+      m_tdomain = m_first_subtree->tdomain() | m_second_subtree->tdomain();
       m_slice_ref = NULL;
     }
   }
@@ -69,9 +69,9 @@ namespace tubex
       delete m_second_subtree;
   }
 
-  const Interval TubeTreeSynthesis::domain() const
+  const Interval TubeTreeSynthesis::tdomain() const
   {
-    return m_domain;
+    return m_tdomain;
   }
 
   int TubeTreeSynthesis::nb_slices() const
@@ -82,20 +82,20 @@ namespace tubex
   const Interval TubeTreeSynthesis::operator()(const Interval& t)
   {
     assert(!t.is_degenerated());
-    assert(domain().is_superset(t));
+    assert(tdomain().is_superset(t));
 
-    Interval inter = m_domain & t;
+    Interval inter = m_tdomain & t;
 
     if(inter.is_empty())
       return Interval::EMPTY_SET;
 
-    else if(is_leaf() || inter == m_domain)
+    else if(is_leaf() || inter == m_tdomain)
       return codomain();
 
     else
     {
-      Interval inter_firstsubtree = m_first_subtree->domain() & inter;
-      Interval inter_secondsubtree = m_second_subtree->domain() & inter;
+      Interval inter_firstsubtree = m_first_subtree->tdomain() & inter;
+      Interval inter_secondsubtree = m_second_subtree->tdomain() & inter;
 
       assert(inter_firstsubtree != inter_secondsubtree); // both degenerated
 
@@ -107,6 +107,29 @@ namespace tubex
 
       else
         return (*m_first_subtree)(inter_firstsubtree) | (*m_second_subtree)(inter_secondsubtree);
+    }
+  }
+  
+  const Interval TubeTreeSynthesis::invert(const Interval& y, const Interval& search_tdomain)
+  {
+    Interval inter = m_tdomain & search_tdomain;
+
+    if(inter.is_empty())
+      return Interval::EMPTY_SET;
+
+    else if(!codomain().intersects(y))
+      return Interval::EMPTY_SET;
+
+    else if(codomain_bounds().first.ub() < y.lb() && codomain_bounds().second.lb() > y.ub())
+      return inter;
+
+    else
+    {
+      if(is_leaf())
+        return inter;
+
+      else
+        return m_first_subtree->invert(y, inter) | m_second_subtree->invert(y, inter);
     }
   }
   
@@ -126,21 +149,27 @@ namespace tubex
 
   const pair<Interval,Interval> TubeTreeSynthesis::eval(const Interval& t)
   {
-    assert(!t.is_degenerated());
-    assert(domain().is_superset(t));
+    if(t.is_degenerated()) // faster to perform the evaluation over the related slice
+      return slice(time_to_index(t.lb()))->eval(t);
 
-    Interval inter = m_domain & t;
+    Interval inter = m_tdomain & t;
 
     if(inter.is_empty())
       return make_pair(Interval::EMPTY_SET, Interval::EMPTY_SET);
 
-    else if(is_leaf() || inter == m_domain)
-      return codomain_bounds();
+    else if(is_leaf() || inter == m_tdomain) // todo: this last condition useful?
+    {
+      if(inter == m_tdomain)
+        return codomain_bounds();
+
+      else
+        return m_slice_ref->eval(inter);
+    }
 
     else
     {
-      Interval inter_firstsubtree = m_first_subtree->domain() & inter;
-      Interval inter_secondsubtree = m_second_subtree->domain() & inter;
+      Interval inter_firstsubtree = m_first_subtree->tdomain() & inter;
+      Interval inter_secondsubtree = m_second_subtree->tdomain() & inter;
 
       assert(inter_firstsubtree != inter_secondsubtree); // both degenerated
 
@@ -159,21 +188,21 @@ namespace tubex
     }
   }
 
-  int TubeTreeSynthesis::input2index(double t) const
+  int TubeTreeSynthesis::time_to_index(double t) const
   {
-    assert(domain().contains(t));
+    assert(tdomain().contains(t));
 
-    if(t == m_domain.ub())
+    if(t == m_tdomain.ub())
       return m_nb_slices - 1;
 
     if(is_leaf())
       return 0;
 
-    if(t < m_first_subtree->domain().ub())
-      return m_first_subtree->input2index(t);
+    if(t < m_first_subtree->tdomain().ub())
+      return m_first_subtree->time_to_index(t);
 
     else
-      return m_second_subtree->input2index(t) + m_first_subtree->nb_slices();
+      return m_second_subtree->time_to_index(t) + m_first_subtree->nb_slices();
   }
 
   Slice* TubeTreeSynthesis::slice(int slice_id)
@@ -263,6 +292,10 @@ namespace tubex
       {
         m_codomain = m_slice_ref->codomain();
         m_codomain_bounds = make_pair(m_codomain.lb(), m_codomain.ub());
+        m_codomain_bounds.first |= m_slice_ref->input_gate().lb();
+        m_codomain_bounds.first |= m_slice_ref->output_gate().lb();
+        m_codomain_bounds.second |= m_slice_ref->input_gate().ub();
+        m_codomain_bounds.second |= m_slice_ref->output_gate().ub();
         m_values_update_needed = false;
       }
 
@@ -295,7 +328,7 @@ namespace tubex
         Interval sum = Interval(0);
         for(const Slice *s = m_tube_ref->first_slice() ; s != NULL ; s = s->next_slice())
         {
-          double dt = s->domain().diam();
+          double dt = s->tdomain().diam();
           Interval slice_value = s->codomain();
           Interval integral = sum + slice_value * Interval(0., dt);
           assert(s->m_synthesis_reference != NULL);
@@ -330,21 +363,21 @@ namespace tubex
     if(m_integrals_update_needed)
       root()->update_integrals();
 
-    int index_lb = m_tube_ref->input2index(t.lb());
-    int index_ub = m_tube_ref->input2index(t.ub());
+    int index_lb = m_tube_ref->time_to_index(t.lb());
+    int index_ub = m_tube_ref->time_to_index(t.ub());
 
     Interval integral_lb = Interval::EMPTY_SET;
     Interval integral_ub = Interval::EMPTY_SET;
 
-    const Slice *slice_lb = m_tube_ref->slice(index_lb);
-    const Slice *slice_ub = m_tube_ref->slice(index_ub);
+    const Slice *s_lb = m_tube_ref->slice(index_lb);
+    const Slice *s_ub = m_tube_ref->slice(index_ub);
 
-    Interval intv_t_lb = slice_lb->domain();
-    Interval intv_t_ub = slice_ub->domain();
+    Interval intv_t_lb = s_lb->tdomain();
+    Interval intv_t_ub = s_ub->tdomain();
 
     // Part A: integral along the temporal domain [t]&[intv_t_lb]
     {
-      pair<Interval,Interval> partial_primitive_first = slice_lb->m_synthesis_reference->m_partial_primitive;
+      pair<Interval,Interval> partial_primitive_first = s_lb->m_synthesis_reference->m_partial_primitive;
       
       if(partial_primitive_first.first.is_empty() || partial_primitive_first.second.is_empty())
         return make_pair(Interval::EMPTY_SET, Interval::EMPTY_SET);
@@ -358,11 +391,11 @@ namespace tubex
         integral_ub |= partial_primitive_first.second;
       }
       
-      else // partial integral (on [t]&[intv_t_lb]) rebuilt from precomputation
+      else // partial integral (on [t]&[intv_t_lb]) rebuilt from pre-computation
       {
         Interval primitive_lb = Interval(partial_primitive_first.first.lb(), partial_primitive_first.second.ub());
 
-        Interval y_first = slice_lb->codomain();
+        Interval y_first = s_lb->codomain();
         Interval ta1 = Interval(intv_t_lb.lb(), t.lb());
         Interval ta2 = Interval(intv_t_lb.lb(), min(t.ub(), intv_t_lb.ub()));
         Interval tb1 = Interval(t.lb(), intv_t_lb.ub());
@@ -397,7 +430,7 @@ namespace tubex
     // Part C: integral along the temporal domain [t]&[intv_t_ub]
     if(index_lb != index_ub)
     {
-      pair<Interval,Interval> partial_primitive_second = slice_ub->m_synthesis_reference->m_partial_primitive;
+      pair<Interval,Interval> partial_primitive_second = s_ub->m_synthesis_reference->m_partial_primitive;
       
       if(partial_primitive_second.first.is_empty() || partial_primitive_second.second.is_empty())
         return make_pair(Interval::EMPTY_SET, Interval::EMPTY_SET);
@@ -411,11 +444,11 @@ namespace tubex
         integral_ub |= partial_primitive_second.second;
       }
       
-      else // partial integral (on [t]&[intv_t_ub]) rebuilt from precomputation
+      else // partial integral (on [t]&[intv_t_ub]) rebuilt from pre-computation
       {
         Interval primitive_ub = Interval(partial_primitive_second.first.lb(), partial_primitive_second.second.ub());
 
-        Interval y_second = slice_ub->codomain();
+        Interval y_second = s_ub->codomain();
         Interval ta = Interval(intv_t_ub.lb(), t.ub());
         Interval tb1 = intv_t_ub;
         Interval tb2 = Interval(t.ub(), intv_t_ub.ub());
@@ -449,18 +482,18 @@ namespace tubex
     if(t == Interval::ALL_REALS)
       return m_partial_primitive; // pre-computed values
 
-    Interval intersection = domain() & t;
+    Interval intersection = tdomain() & t;
 
     if(intersection.is_empty())
       return make_pair(Interval::EMPTY_SET, Interval::EMPTY_SET);
 
-    else if(is_leaf() || t == domain() || t.is_superset(domain()))
+    else if(is_leaf() || t == tdomain() || t.is_superset(tdomain()))
       return m_partial_primitive; // pre-computed values
 
     else
     {
-      Interval inter_firstsubtree = m_first_subtree->domain() & intersection;
-      Interval inter_secondsubtree = m_second_subtree->domain() & intersection;
+      Interval inter_firstsubtree = m_first_subtree->tdomain() & intersection;
+      Interval inter_secondsubtree = m_second_subtree->tdomain() & intersection;
       
       if(inter_firstsubtree.is_degenerated() && inter_secondsubtree.is_degenerated())
         return make_pair(m_first_subtree->partial_primitive_bounds().first & m_second_subtree->partial_primitive_bounds().first,

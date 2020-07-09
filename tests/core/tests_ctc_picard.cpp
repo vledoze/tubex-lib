@@ -1,10 +1,12 @@
-#include "tests.h"
 #include <cstdio>
+#include "catch_interval.hpp"
 #include "tubex_VIBesFigTube.h"
 #include "vibes.h"
 
-#define protected public     // Using #define so that we can access protected
-#include "tubex_CtcPicard.h" // methods of CtcPicard for tests purposes
+// Using #define so that we can access protected methods
+// of the class for tests purposes
+#define protected public
+#include "tubex_CtcPicard.h"
 
 using namespace Catch;
 using namespace Detail;
@@ -27,42 +29,42 @@ TEST_CASE("CtcPicard")
     Slice *slice;
 
     tube = tube_raw;
-    tubex::Function f2("x", "3.");
-    Interval dtest = tube[0].slice_domain(0);
+    TFunction f2("x", "3.");
+    Interval dtest = tube[0].slice_tdomain(0);
     IntervalVector test = f2.eval_vector(dtest, tube);
-    ctc_picard.guess_kth_slices_envelope(f2, tube, 0, FORWARD);
+    ctc_picard.guess_kth_slices_envelope(f2, tube, 0, TimePropag::FORWARD);
     CHECK(tube(0).is_superset(1.5 + Interval(0.,0.5) * 3.));
 
     tube = tube_raw;
-    tubex::Function f3("x", "t");
-    ctc_picard.guess_kth_slices_envelope(f3, tube, 0, FORWARD);
+    TFunction f3("x", "t");
+    ctc_picard.guess_kth_slices_envelope(f3, tube, 0, TimePropag::FORWARD);
     CHECK(tube(0).is_superset(1.5 + Interval(0.,0.5) * t));
 
     tube = tube_raw;
-    f3 = tubex::Function("x", "t^2"); // with operator= of class Function
-    ctc_picard.guess_kth_slices_envelope(f3, tube, 0, FORWARD);
+    f3 = TFunction("x", "t^2"); // with operator= of class TFunction
+    ctc_picard.guess_kth_slices_envelope(f3, tube, 0, TimePropag::FORWARD);
     CHECK(tube(0).is_superset(1.5 + Interval(0.,0.5) * t * t));
 
     tube = tube_raw;
-    tubex::Function f5("x", "x");
-    ctc_picard.guess_kth_slices_envelope(f5, tube, 0, FORWARD);
+    TFunction f5("x", "x");
+    ctc_picard.guess_kth_slices_envelope(f5, tube, 0, TimePropag::FORWARD);
     CHECK(tube(0).is_superset(1.5 + Interval(0.,0.5) * Interval(1.,2.)));
 
     tube = tube_raw;
-    tubex::Function f6("x", "x*t");
-    ctc_picard.guess_kth_slices_envelope(f6, tube, 0, FORWARD);
+    TFunction f6("x", "x*t");
+    ctc_picard.guess_kth_slices_envelope(f6, tube, 0, TimePropag::FORWARD);
     CHECK(tube(0).is_superset(1.5 + Interval(0.,0.5) * Interval(1.,2.) * t));
 
     tube = tube_raw;
     tube.set(IntervalVector(1, 2.*atan(exp(-t.lb())*tan(0.5))), t.lb());
-    tubex::Function f7("x", "-sin(x)");
-    ctc_picard.guess_kth_slices_envelope(f7, tube, 0, FORWARD);
+    TFunction f7("x", "-sin(x)");
+    ctc_picard.guess_kth_slices_envelope(f7, tube, 0, TimePropag::FORWARD);
     CHECK(tube(0).is_superset(Interval(2.*atan(exp(-t.lb())*tan(0.5))) | 2.*atan(exp(-t.ub())*tan(0.5))));
     
     tube = tube_raw;
     tube.set(IntervalVector(1, exp(-t.lb())), t.lb());
-    tubex::Function f8("x", "-x");
-    ctc_picard.guess_kth_slices_envelope(f8, tube, 0, FORWARD);
+    TFunction f8("x", "-x");
+    ctc_picard.guess_kth_slices_envelope(f8, tube, 0, TimePropag::FORWARD);
     CHECK(tube(0).is_superset(IntervalVector(Interval(exp(-t.lb()))) | IntervalVector(Interval(exp(-t.ub())))));
   }
 
@@ -73,13 +75,13 @@ TEST_CASE("CtcPicard")
     tube.set(IntervalVector(1, exp(domain.lb())), domain.lb());
     Slice *x = tube[0].first_slice();
 
-    tubex::Function f("x", "x");
+    TFunction f("x", "x");
     CtcPicard ctc_picard(1.1);
 
     CHECK(x->codomain() == Interval::ALL_REALS);
     CHECK(x->input_gate() == exp(0.));
     CHECK(x->output_gate() == Interval::ALL_REALS);
-    ctc_picard.contract(f, tube, FORWARD);
+    ctc_picard.contract(f, tube, TimePropag::FORWARD);
     x = tube[0].first_slice();
     // TODO : CHECK(x->codomain()==(Interval(exp(domain))));
     CHECK(x->output_gate().is_superset(Interval(exp(domain.ub()))));
@@ -97,14 +99,14 @@ TEST_CASE("CtcPicard")
 
     TubeVector x_auto_sampling(x_preserve_sampling);
 
-    tubex::Function f("x", "-x");
+    TFunction f("x", "-x");
     CtcPicard ctc_picard_preserve(1.1);
     ctc_picard_preserve.preserve_slicing(true);
     CtcPicard ctc_picard_auto(1.1);
     ctc_picard_auto.preserve_slicing(false);
 
-    ctc_picard_preserve.contract(f, x_preserve_sampling, FORWARD); // todo: remove FORWARD
-    ctc_picard_auto.contract(f, x_auto_sampling, FORWARD); // todo: remove FORWARD
+    ctc_picard_preserve.contract(f, x_preserve_sampling, TimePropag::FORWARD); // todo: remove FORWARD
+    ctc_picard_auto.contract(f, x_auto_sampling, TimePropag::FORWARD); // todo: remove FORWARD
     
     CHECK_FALSE(x_preserve_sampling.codomain().is_unbounded());
     // TODO : CHECK(x_preserve_sampling.codomain().is_superset(exp(-domain)));
@@ -135,9 +137,9 @@ TEST_CASE("CtcPicard")
     IntervalVector condition(2, Interval(1.));
     x.set(condition, 0.);
     
-    tubex::Function f("x", "y", "(-x ; y)");
+    TFunction f("x", "y", "(-x ; y)");
     CtcPicard ctc_picard(1.1/*, false*/);
-    ctc_picard.contract(f, x, FORWARD);
+    ctc_picard.contract(f, x, TimePropag::FORWARD);
 
     CHECK_FALSE(x.codomain().is_unbounded());
     // TODO : CHECK(x.codomain()[0].is_superset(exp(-domain)));
@@ -163,10 +165,10 @@ TEST_CASE("CtcPicard")
     Tube x(domain);
     x.set(1., 0.);
 
-    tubex::Function f("x", "-x");
+    TFunction f("x", "-x");
     CtcPicard ctc_picard(1.1/*, false*/);
 
-    ctc_picard.contract(f, x, FORWARD);
+    ctc_picard.contract(f, x, TimePropag::FORWARD);
     
     CHECK_FALSE(x.codomain().is_unbounded());
     // TODO : CHECK(x.codomain().is_superset(exp(-domain)));
@@ -189,10 +191,10 @@ TEST_CASE("CtcPicard")
     Tube x(domain);
     x.set(exp(-1), 1.);
 
-    tubex::Function f("x", "-x");
+    TFunction f("x", "-x");
     CtcPicard ctc_picard(1.1/*, false*/);
 
-    ctc_picard.contract(f, x, BACKWARD);
+    ctc_picard.contract(f, x, TimePropag::BACKWARD);
     CHECK_FALSE(x.codomain().is_unbounded());
     CHECK(x.codomain().is_superset(Interval(exp(-domain.lb())) | exp(-domain.ub())));
     CHECK(x(0.).is_superset(Interval(exp(-0.))));

@@ -3,17 +3,17 @@
  * ----------------------------------------------------------------------------
  *  \date       2015
  *  \author     Simon Rohou
- *  \copyright  Copyright 2019 Simon Rohou
+ *  \copyright  Copyright 2020 Simon Rohou
  *  \license    This program is distributed under the terms of
  *              the GNU Lesser General Public License (LGPL).
  */
 
 #include <string>
 #include <iomanip>
-#include "tubex_VIBesFigMap.h"
-#include "tubex_colors.h"
-#include "tubex_Tube.h"
-#include "tubex_Trajectory.h"
+#include <tubex_VIBesFigMap.h>
+#include <tubex_colors.h>
+#include <tubex_Tube.h>
+#include <tubex_Trajectory.h>
 
 using namespace std;
 using namespace ibex;
@@ -39,7 +39,7 @@ namespace tubex
       }
   }
   
-  void VIBesFigMap::set_restricted_tdomain(const Interval& restricted_tdomain)
+  void VIBesFigMap::restrict_tdomain(const Interval& restricted_tdomain)
   {
     m_restricted_tdomain = restricted_tdomain;
   }
@@ -70,13 +70,13 @@ namespace tubex
     show();
   }
 
-  void VIBesFigMap::set_tube_max_nb_disp_slices(int max)
+  void VIBesFigMap::set_tube_max_disp_slices(int max)
   {
     assert(max > 0);
     m_tube_max_nb_disp_slices = max;
   }
 
-  void VIBesFigMap::set_traj_max_nb_disp_points(int max)
+  void VIBesFigMap::set_traj_max_disp_points(int max)
   {
     assert(max > 0);
     m_traj_max_nb_disp_points = max;
@@ -237,18 +237,69 @@ namespace tubex
     draw_beacon(beacon, width, color, vibesParams("figure", name(), "group", "beacons"));
   }
 
+  void VIBesFigMap::add_beacon(const IntervalVector& beacon, const string& color)
+  {
+    // Simply directly drawn
+    draw_beacon(Beacon(beacon), color, vibesParams("figure", name(), "group", "beacons"));
+  }
+
+  void VIBesFigMap::add_beacon(const Vector& beacon, double width, const string& color)
+  {
+    // Simply directly drawn
+    draw_beacon(Beacon(beacon), width, color, vibesParams("figure", name(), "group", "beacons"));
+  }
+
   void VIBesFigMap::add_beacons(const vector<Beacon>& v_beacons, const string& color)
   {
     // Simply directly drawn
-    for(int i = 0 ; i < v_beacons.size() ; i++)
+    for(size_t i = 0 ; i < v_beacons.size() ; i++)
       add_beacon(v_beacons[i], color);
   }
 
   void VIBesFigMap::add_beacons(const vector<Beacon>& v_beacons, double width, const string& color)
   {
     // Simply directly drawn
-    for(int i = 0 ; i < v_beacons.size() ; i++)
+    for(size_t i = 0 ; i < v_beacons.size() ; i++)
       add_beacon(v_beacons[i], width, color);
+  }
+
+  void VIBesFigMap::add_landmarks(const vector<IntervalVector>& v_beacons, const string& color)
+  {
+    // Simply directly drawn
+    for(size_t i = 0 ; i < v_beacons.size() ; i++)
+      add_beacon(v_beacons[i], color);
+  }
+
+  void VIBesFigMap::add_landmarks(const vector<Vector>& v_beacons, double width, const string& color)
+  {
+    // Simply directly drawn
+    for(size_t i = 0 ; i < v_beacons.size() ; i++)
+    {
+      IntervalVector b(v_beacons[i]);
+      b.inflate(width);
+      add_beacon(b, width, color);
+    }
+  }
+  
+  void VIBesFigMap::add_observation(const IntervalVector& obs, const Vector& pose, const string& color)
+  {
+    assert(obs.size() == 2);
+    assert(pose.size() == 3);
+
+    // Simply directly drawn
+    draw_observation(obs, pose, color, vibesParams("figure", name(), "group", "obs"));
+  }
+  
+  void VIBesFigMap::add_observations(const vector<IntervalVector>& v_obs, const Vector& pose, const string& color)
+  {
+    assert(pose.size() == 3);
+
+    // Simply directly drawn
+    for(size_t i = 0 ; i < v_obs.size() ; i++)
+    {
+      assert(v_obs[i].size() == 2);
+      add_observation(v_obs[i], pose, color);
+    }
   }
   
   void VIBesFigMap::add_observation(const IntervalVector& obs, const TrajectoryVector *traj, const string& color)
@@ -268,7 +319,7 @@ namespace tubex
       && "unknown traj, must be added beforehand");
 
     // Simply directly drawn
-    for(int i = 0 ; i < v_obs.size() ; i++)
+    for(size_t i = 0 ; i < v_obs.size() ; i++)
       add_observation(v_obs[i], traj, color);
   }
 
@@ -342,7 +393,7 @@ namespace tubex
     vibes::newGroup(group_name, m_map_trajs[traj].color, vibesParams("figure", name()));
 
     IntervalVector viewbox(2, Interval::EMPTY_SET);
-    if(traj->domain().is_unbounded() || traj->domain().is_empty())
+    if(traj->tdomain().is_unbounded() || traj->tdomain().is_empty())
       return viewbox;
 
     vector<double> v_x, v_y;
@@ -353,20 +404,48 @@ namespace tubex
 
       vector<string> v_colors;
       Trajectory identity_traj;
-      identity_traj.set(traj->domain().lb(), traj->domain().lb());
-      identity_traj.set(traj->domain().ub(), traj->domain().ub());
+      identity_traj.set(traj->tdomain().lb(), traj->tdomain().lb());
+      identity_traj.set(traj->tdomain().ub(), traj->tdomain().ub());
 
       const Trajectory *traj_colormap = &identity_traj;
       if(m_map_trajs[traj].color_map.second != NULL)
         traj_colormap = m_map_trajs[traj].color_map.second;
 
-    if((*traj)[index_x].sampled_map().size() != 0)
+    if((*traj)[index_x].definition_type() == TrajDefnType::MAP_OF_VALUES
+        && (*traj)[index_x].sampled_map().size() != 0)
     {
-      typename map<double,double>::const_iterator it_scalar_values_x, it_scalar_values_y;
-      it_scalar_values_x = (*traj)[index_x].sampled_map().begin();
-      it_scalar_values_y = (*traj)[index_y].sampled_map().begin();
+      const Trajectory *displayed_traj_x, *displayed_traj_y;
+      Trajectory *temp_displayed_traj_x = NULL, *temp_displayed_traj_y = NULL; // possibly used in case of heavy trajectories
 
-      while(it_scalar_values_x != (*traj)[index_x].sampled_map().end())
+      if((*traj)[index_x].sampled_map().size() > m_traj_max_nb_disp_points) // heavy trajectories
+      {
+        // Computing a trajectory less discretized
+        
+          temp_displayed_traj_x = new Trajectory;
+          temp_displayed_traj_y = new Trajectory;
+
+          for(double t = traj->tdomain().lb() ; t <= traj->tdomain().ub() ; t+=traj->tdomain().diam()/m_traj_max_nb_disp_points)
+          {
+            temp_displayed_traj_x->set((*traj)[index_x](t), t);
+            temp_displayed_traj_y->set((*traj)[index_y](t), t);
+          }
+
+        displayed_traj_x = temp_displayed_traj_x;
+        displayed_traj_y = temp_displayed_traj_y;
+      }
+
+      else
+      {
+        // We will display the actual trajectories, entirely
+        displayed_traj_x = &(*traj)[index_x];
+        displayed_traj_y = &(*traj)[index_y];
+      }
+
+      typename map<double,double>::const_iterator it_scalar_values_x, it_scalar_values_y;
+      it_scalar_values_x = displayed_traj_x->sampled_map().begin();
+      it_scalar_values_y = displayed_traj_y->sampled_map().begin();
+
+      while(it_scalar_values_x != displayed_traj_x->sampled_map().end())
       {
         if(m_restricted_tdomain.contains(it_scalar_values_x->first))
         {
@@ -390,11 +469,17 @@ namespace tubex
         it_scalar_values_x++;
         it_scalar_values_y++;
       }
+
+      if(temp_displayed_traj_x != NULL)
+      {
+        delete displayed_traj_x;
+        delete displayed_traj_y;
+      }
     }
 
     else
     {
-      for(double t = traj->domain().lb() ; t <= traj->domain().ub() ; t+=traj->domain().diam()/m_traj_max_nb_disp_points)
+      for(double t = traj->tdomain().lb() ; t <= traj->tdomain().ub() ; t+=traj->tdomain().diam()/m_traj_max_nb_disp_points)
       {
         double x = (*traj)[index_x](t);
         double y = (*traj)[index_y](t);
@@ -421,7 +506,7 @@ namespace tubex
     vibes::Params params = vibesParams("figure", name(), "group", group_name);
 
     if(m_map_trajs[traj].color == "")
-      for(int i = 0 ; i < v_x.size()-1 ; i++) // shaded lines
+      for(size_t i = 0 ; i < v_x.size()-1 ; i++) // shaded lines
       {
         vector<double> v_local_x, v_local_y;
         v_local_x.push_back(v_x[i]); v_local_x.push_back(v_x[i+1]);
@@ -433,7 +518,7 @@ namespace tubex
     else
       vibes::drawLine(v_x, v_y, params);
 
-    draw_vehicle((traj->domain() & m_restricted_tdomain).ub(), traj, params);
+    draw_vehicle((traj->tdomain() & m_restricted_tdomain).ub(), traj, params);
 
     return viewbox;
   }
@@ -465,7 +550,11 @@ namespace tubex
         for(int k = 0 ; k < m_map_tubes[tube].tube_x_copy->nb_slices() ;
             k += step * 2) // less slices for the background
         {
-          if(!(*m_map_tubes[tube].tube_x_copy).slice(k)->domain().intersects(m_restricted_tdomain))
+          if(!(*m_map_tubes[tube].tube_x_copy).slice(k)->tdomain().intersects(m_restricted_tdomain))
+            continue;
+
+          if((*m_map_tubes[tube].tube_x_copy).slice(k)->codomain().is_empty()
+          || (*m_map_tubes[tube].tube_y_copy).slice(k)->codomain().is_empty())
             continue;
 
           IntervalVector box(2);
@@ -477,9 +566,9 @@ namespace tubex
             // Display using polygons
             if(!prev_box.is_unbounded())
             {
-              vector<Point> v_pts;
-              push_points(box, v_pts);
-              push_points(prev_box, v_pts);
+              vector<Vector> v_pts;
+              Point::push(box, v_pts);
+              Point::push(prev_box, v_pts);
               ConvexPolygon p(v_pts, false);
               draw_polygon(p, color, params);
             }
@@ -512,14 +601,14 @@ namespace tubex
         const ColorMap *color_map = &m_map_tubes[tube].color_map.first;
 
         Trajectory identity_traj;
-        identity_traj.set(tube->domain().lb(), tube->domain().lb());
-        identity_traj.set(tube->domain().ub(), tube->domain().ub());
+        identity_traj.set(tube->tdomain().lb(), tube->tdomain().lb());
+        identity_traj.set(tube->tdomain().ub(), tube->tdomain().ub());
 
         const Trajectory *traj_colormap = &identity_traj;
         if(m_map_tubes[tube].color_map.second != NULL)
           traj_colormap = m_map_tubes[tube].color_map.second;
 
-      int k0, kf, kstep;
+      int k0, kf;
       bool from_first_to_last = m_map_tubes[tube].from_first_to_last;
       IntervalVector prev_box(2); // used for diff or polygon display
 
@@ -539,17 +628,21 @@ namespace tubex
           (from_first_to_last && k <= kf) || (!from_first_to_last && k >= kf) ;
           k+= from_first_to_last ? max(1,min(step,kf-k)) : -max(1,min(step,k)))
       {
-        if(!(*tube)[0].slice(k)->domain().intersects(m_restricted_tdomain))
+        if(!(*tube)[0].slice(k)->tdomain().intersects(m_restricted_tdomain))
           continue;
 
         IntervalVector box(2);
-        box[0] = (*tube)[m_map_tubes[tube].index_x](k);
-        box[1] = (*tube)[m_map_tubes[tube].index_y](k);
+        box[0] = (*tube)[m_map_tubes[tube].index_x].slice(k)->codomain();
+        box[1] = (*tube)[m_map_tubes[tube].index_y].slice(k)->codomain();
+        // Note: the last output gate is never shown
+
+        if(box.is_empty())
+          continue;
 
         string color = m_map_tubes[tube].color;
         if(color == "") // then defined by a color map
         {
-          color = rgb2hex(color_map->color((*tube)[0].slice(k)->domain().mid(), *traj_colormap));
+          color = rgb2hex(color_map->color((*tube)[0].slice(k)->tdomain().mid(), *traj_colormap));
           color = color + "[" + color + "]";
         }
 
@@ -558,9 +651,9 @@ namespace tubex
           // Display using polygons
           if(!prev_box.is_unbounded())
           {
-            vector<Point> v_pts;
-            push_points(box, v_pts);
-            push_points(prev_box, v_pts);
+            vector<Vector> v_pts;
+            Point::push(box, v_pts);
+            Point::push(prev_box, v_pts);
             ConvexPolygon p(v_pts, false);
             draw_polygon(p, color, params);
           }
@@ -586,19 +679,23 @@ namespace tubex
 
         prev_box = box;
       }
-      
-      /*IntervalVector first_box(2);
-      double tlb = (m_restricted_tdomain & tube->domain()).lb();
-      first_box[0] = (*tube)[m_map_tubes[tube].index_x](tlb);
-      first_box[1] = (*tube)[m_map_tubes[tube].index_y](tlb);
-      draw_box(first_box, "#C02600[]", params); // red
-      
-      IntervalVector last_box(2);
-      double tub = (m_restricted_tdomain & tube->domain()).ub();
-      last_box[0] = (*tube)[m_map_tubes[tube].index_x](tub);
-      last_box[1] = (*tube)[m_map_tubes[tube].index_y](tub);
-      draw_box(last_box, "#47A040[]", params); // green*/
     }
+  }
+
+  void VIBesFigMap::draw_vehicle(const Vector& pose, float size)
+  {
+    assert(pose.size() == 2 || pose.size() == 3);
+    draw_vehicle(pose, vibesParams("figure", name()), size);
+  }
+
+  void VIBesFigMap::draw_vehicle(const Vector& pose, const vibes::Params& params, float size)
+  {
+    assert(pose.size() == 2 || pose.size() == 3);
+    float robot_size = size == -1 ? m_robot_size : size;
+    double robot_heading = pose.size() == 3 ? pose[2] : 0.;
+    axis_limits(m_view_box | pose.subvector(0,1), true);
+    //vibes::drawTank(pose[0], pose[1], robot_heading * 180. / M_PI, robot_size, "black[yellow]", params);
+    vibes::drawAUV(pose[0], pose[1], robot_heading * 180. / M_PI, robot_size, "black[yellow]", params);
   }
 
   void VIBesFigMap::draw_vehicle(double t, const TrajectoryVector *traj, float size)
@@ -611,34 +708,14 @@ namespace tubex
     assert(traj != NULL);
     assert(m_map_trajs.find(traj) != m_map_trajs.end()
       && "unknown traj, must be added beforehand");
-    assert(traj->domain().contains(t));
+    assert(traj->tdomain().contains(t));
 
-    double robot_x = (*traj)[m_map_trajs[traj].index_x](t);
-    double robot_y = (*traj)[m_map_trajs[traj].index_y](t);
-    double robot_heading;
+    Vector pose(3);
+    pose[0] = (*traj)[m_map_trajs[traj].index_x](t);
+    pose[1] = (*traj)[m_map_trajs[traj].index_y](t);
+    pose[2] = heading(t, traj);
 
-    if(m_map_trajs[traj].index_heading == -1) // heading traj not available
-    {
-      double next_t;
-      float delta_t = traj->domain().diam() / 10000.;
-      if(t >= traj->domain().lb() + delta_t) next_t = t - delta_t;
-      else next_t = t + delta_t;
-
-      double robot_next_x = (*traj)[m_map_trajs[traj].index_x](next_t);
-      double robot_next_y = (*traj)[m_map_trajs[traj].index_y](next_t);
-      robot_heading = std::atan2(robot_y - robot_next_y, robot_x - robot_next_x);
-      if(next_t > t) robot_heading += M_PI;
-    }
-
-    else
-    {
-      assert((*traj)[m_map_trajs[traj].index_heading].domain() == (*traj)[m_map_trajs[traj].index_x].domain());
-      assert((*traj)[m_map_trajs[traj].index_heading].domain().contains(t));
-      robot_heading = (*traj)[m_map_trajs[traj].index_heading](t);
-    }
-
-    float robot_size = size == -1 ? m_robot_size : size;
-    vibes::drawAUV(robot_x, robot_y, robot_heading * 180. / M_PI, robot_size, "black[yellow]", params);
+    draw_vehicle(pose, params, size);
   }
 
   void VIBesFigMap::draw_beacon(const Beacon& beacon, const string& color, const vibes::Params& params)
@@ -655,6 +732,29 @@ namespace tubex
     draw_box(drawn_box.inflate(width/2.), color, params);
   }
 
+  void VIBesFigMap::draw_observation(const IntervalVector& obs, const Vector& pose, const string& color, const vibes::Params& params)
+  {
+    assert(obs.size() == 2);
+    assert(pose.size() == 3);
+
+    if(obs.is_empty())
+      return;
+
+    // todo: use color and params args
+
+    vibes::newGroup("obs", DEFAULT_OBS_COLOR, vibesParams("figure", name()));
+
+    vibes::drawPie(pose[0], pose[1],
+                   0.001, obs[0].mid(),
+                   (pose[2]+obs[1].lb()) * 180./M_PI, (pose[2]+obs[1].ub()) * 180./M_PI,
+                   "#000"/*#B9B9B9*/, vibesParams("figure", name(), "group", "obs"));
+
+    vibes::drawPie(pose[0], pose[1],
+                   obs[0].lb(), obs[0].ub(),
+                   (pose[2]+obs[1].lb()) * 180./M_PI, (pose[2]+obs[1].ub()) * 180./M_PI,
+                   "#000[#ffffff88]"/*#B9B9B9[#DCDCDC]*/, vibesParams("figure", name(), "group", "obs"));
+  }
+
   void VIBesFigMap::draw_observation(const IntervalVector& obs, const TrajectoryVector *traj, const string& color, const vibes::Params& params)
   {
     assert(obs.size() >= 3);
@@ -662,19 +762,49 @@ namespace tubex
     assert(m_map_trajs.find(traj) != m_map_trajs.end()
       && "unknown traj, must be added beforehand");
 
+    if(obs.is_empty())
+      return;
+    
     vibes::newGroup("obs", DEFAULT_OBS_COLOR, vibesParams("figure", name()));
 
-    double x = (*traj)[m_map_trajs[traj].index_x](obs[0].mid());
-    double y = (*traj)[m_map_trajs[traj].index_y](obs[0].mid());
+    Vector pose(3);
+    pose[0] = (*traj)[m_map_trajs[traj].index_x](obs[0].mid());
+    pose[1] = (*traj)[m_map_trajs[traj].index_y](obs[0].mid());
+    pose[2] = heading(obs[0].mid(), traj);
 
-    vibes::drawPie(x, y,
-                   0.001, obs[1].mid(),
-                   obs[2].lb() * 180. / M_PI, obs[2].ub() * 180. / M_PI,
-                   "#000"/*#B9B9B9*/, vibesParams("figure", name(), "group", "obs"));
+    draw_observation(obs.subvector(1,2), pose, color, params);
+  }
 
-    vibes::drawPie(x, y,
-                   obs[1].lb(), obs[1].ub(),
-                   obs[2].lb() * 180. / M_PI, obs[2].ub() * 180. / M_PI,
-                   "#000[#ffffff]"/*#B9B9B9[#DCDCDC]*/, vibesParams("figure", name(), "group", "obs"));
+  double VIBesFigMap::heading(double t, const TrajectoryVector *traj) const
+  {
+    if(m_map_trajs.at(traj).index_heading == -1) // heading traj not available
+    {
+      float delta_t = traj->tdomain().diam() / 10000.;
+      double next_t;
+
+      if(t >= traj->tdomain().lb() + delta_t)
+        next_t = t - delta_t;
+      else
+        next_t = t + delta_t;
+
+      double robot_next_x = (*traj)[m_map_trajs.at(traj).index_x](next_t);
+      double robot_next_y = (*traj)[m_map_trajs.at(traj).index_y](next_t);
+
+      double robot_x = (*traj)[m_map_trajs.at(traj).index_x](t);
+      double robot_y = (*traj)[m_map_trajs.at(traj).index_y](t);
+      double robot_heading = std::atan2(robot_y - robot_next_y, robot_x - robot_next_x);
+
+      if(next_t > t)
+        robot_heading += M_PI;
+
+      return robot_heading;
+    }
+
+    else
+    {
+      assert((*traj)[m_map_trajs.at(traj).index_heading].tdomain() == (*traj)[m_map_trajs.at(traj).index_x].tdomain());
+      assert((*traj)[m_map_trajs.at(traj).index_heading].tdomain().contains(t));
+      return (*traj)[m_map_trajs.at(traj).index_heading](t);
+    }
   }
 }

@@ -4,7 +4,7 @@
  * ----------------------------------------------------------------------------
  *  \date       2016
  *  \author     Simon Rohou
- *  \copyright  Copyright 2019 Simon Rohou
+ *  \copyright  Copyright 2020 Simon Rohou
  *  \license    This program is distributed under the terms of
  *              the GNU Lesser General Public License (LGPL).
  */
@@ -78,6 +78,11 @@ namespace tubex
        * \return the view box
        */
       const ibex::IntervalVector& view_box() const;
+
+      /**
+       * \brief Reset the view box of this figure
+       */
+      void reset_view_box();
       
       /**
        * \brief Sets the properties (coordinates and dimensions) of this figure
@@ -89,14 +94,6 @@ namespace tubex
        */
       void set_properties(int x, int y, int width, int height);
       
-      /**
-       * \brief Adds an integer suffix to a string
-       *
-       * \param name the string to be updated
-       * \param id the integer to add
-       * \return the string value `string`_`id`
-       */
-      static std::string add_suffix(const std::string& name, int id);
 
     protected:
       

@@ -3,7 +3,7 @@
  * ----------------------------------------------------------------------------
  *  \date       2015
  *  \author     Simon Rohou
- *  \copyright  Copyright 2019 Simon Rohou
+ *  \copyright  Copyright 2020 Simon Rohou
  *  \license    This program is distributed under the terms of
  *              the GNU Lesser General Public License (LGPL).
  */
@@ -16,7 +16,7 @@ using namespace ibex;
 namespace tubex
 {
   TPlane::TPlane()
-    : Paving(IntervalVector(2), VALUE_MAYBE)
+    : Paving(IntervalVector(2), SetValue::MAYBE)
   {
 
   }
@@ -29,14 +29,14 @@ namespace tubex
   void TPlane::compute_detections(float precision, const TubeVector& p, const TubeVector& v, bool extract_subsets)
   {
     assert(precision > 0.);
-    assert(p.domain() == v.domain());
+    assert(p.tdomain() == v.tdomain());
     assert(p.size() == 2 && v.size() == 2);
 
     if(m_box.is_unbounded())
-      m_box = IntervalVector(2, p.domain()); // initializing
+      m_box = IntervalVector(2, p.tdomain()); // initializing
     m_precision = precision;
     
-    if(value() == VALUE_OUT)
+    if(value() == SetValue::OUT)
       return;
 
     else if(!is_leaf())
@@ -87,13 +87,13 @@ namespace tubex
       // Conclusion
 
         if(derivative_out || primitive_out)
-          set_value(VALUE_OUT);
+          set_value(SetValue::OUT);
 
         else if(derivative_in && primitive_in)
-          set_value(VALUE_IN);
+          set_value(SetValue::IN);
 
         else if(max(t1.diam(), t2.diam()) < precision)
-          set_value(VALUE_MAYBE);
+          set_value(SetValue::MAYBE);
 
         else
         {
@@ -109,7 +109,7 @@ namespace tubex
 
   void TPlane::compute_proofs(IntervalVector (*f)(const IntervalVector& b))
   {
-    for(int i = 0 ; i < m_v_detected_loops.size() ; i++)
+    for(size_t i = 0 ; i < m_v_detected_loops.size() ; i++)
       if(m_v_detected_loops[i].zero_proven(f))
         m_v_proven_loops.push_back(m_v_detected_loops[i]);
   }
@@ -139,11 +139,11 @@ namespace tubex
     Trajectory traj;
     traj.set(0., box()[0].lb());
     traj.set(0., box()[0].ub());
-    traj.discretize(m_precision);
+    traj.sample(m_precision);
     const map<double,double> map_values = traj.sampled_map();
 
     // Detected loops: value set to 1
-    for(int i = 0 ; i < m_v_detected_loops.size() ; i++)
+    for(size_t i = 0 ; i < m_v_detected_loops.size() ; i++)
     {
       for(int j = 0 ; j < 2 ; j++)
       {
@@ -162,7 +162,7 @@ namespace tubex
     }
 
     // Proven loops: value set to 2
-    for(int i = 0 ; i < m_v_proven_loops.size() ; i++)
+    for(size_t i = 0 ; i < m_v_proven_loops.size() ; i++)
     {
       for(int j = 0 ; j < 2 ; j++)
       {

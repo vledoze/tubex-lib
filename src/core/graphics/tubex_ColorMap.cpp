@@ -3,7 +3,7 @@
  * ----------------------------------------------------------------------------
  *  \date       2019
  *  \author     Simon Rohou
- *  \copyright  Copyright 2019 Simon Rohou
+ *  \copyright  Copyright 2020 Simon Rohou
  *  \license    This program is distributed under the terms of
  *              the GNU Lesser General Public License (LGPL).
  */
@@ -17,10 +17,10 @@ using namespace ibex;
 
 namespace tubex
 {
-  ColorMap::ColorMap(int interpol_mode)
+  ColorMap::ColorMap(InterpolMode interpol_mode)
     : m_interpol_mode(interpol_mode)
   {
-    assert(interpol_mode == InterpolationMode::RGB || interpol_mode == InterpolationMode::HSV);
+    assert(interpol_mode == InterpolMode::RGB || interpol_mode == InterpolMode::HSV);
   }
   
   const ColorMap& ColorMap::operator=(const ColorMap& x)
@@ -38,6 +38,14 @@ namespace tubex
   void ColorMap::add_color_point(hsv color, float index)
   {
     m_colormap[index] = hsv2rgb(color);
+  }
+
+  void ColorMap::reverse()
+  {
+    map<float,rgb> reversed_map;
+    for(map<float,rgb>::iterator it = m_colormap.begin() ; it != m_colormap.end() ; it++)
+      reversed_map[1.-it->first] = it->second;
+    m_colormap = reversed_map;
   }
 
   void ColorMap::set_opacity(float alpha)
@@ -58,6 +66,9 @@ namespace tubex
   rgb ColorMap::color(double r) const
   {
     assert(m_colormap.size() >= 2 && "color map defined by at least two colors");
+
+    if(std::isnan(r)) // undefined ratio
+      return make_rgb((float)0.5, 0.5, 0.5);
     assert(Interval(0.,1.).contains(r) && "r between 0 and 1");
 
     Interval map_domain = Interval(m_colormap.begin()->first,prev(m_colormap.end())->first);
@@ -74,13 +85,13 @@ namespace tubex
       
       switch(m_interpol_mode)
       {
-        case InterpolationMode::RGB:
+        case InterpolMode::RGB:
           return make_rgb((float)(rgb_lb.r + (rgb_ub.r - rgb_lb.r) * local_ratio),
                           (float)(rgb_lb.g + (rgb_ub.g - rgb_lb.g) * local_ratio),
                           (float)(rgb_lb.b + (rgb_ub.b - rgb_lb.b) * local_ratio),
                           (float)(rgb_lb.alpha + (rgb_ub.alpha - rgb_lb.alpha) * local_ratio));
 
-        case InterpolationMode::HSV:
+        case InterpolMode::HSV:
         {
           hsv hsv_lb = rgb2hsv(rgb_lb);
           hsv hsv_ub = rgb2hsv(rgb_ub);
@@ -106,7 +117,7 @@ namespace tubex
 
   rgb ColorMap::color(double t, const Trajectory& f) const
   {
-    assert(f.domain().contains(t));
+    assert(f.tdomain().contains(t));
     assert(!f.not_defined());
 
     Interval traj_envelope = f.codomain();
@@ -134,7 +145,7 @@ namespace tubex
   
   ColorMap make_haxby()
   {
-    ColorMap map(RGB);
+    ColorMap map(InterpolMode::RGB);
     map.add_color_point(make_rgb(39,90,211), 0);
     map.add_color_point(make_rgb(40,123,245), 1);
     map.add_color_point(make_rgb(45,155,253), 2);
@@ -158,7 +169,7 @@ namespace tubex
   
   ColorMap make_default()
   {
-    ColorMap map(RGB);
+    ColorMap map(InterpolMode::RGB);
     map.add_color_point(make_rgb(10,0,121), 0);
     map.add_color_point(make_rgb(40,0,150), 1);
     map.add_color_point(make_rgb(20,5,175), 2);
@@ -198,11 +209,21 @@ namespace tubex
   
   ColorMap make_blue_tube()
   {
-    ColorMap map(RGB);
-    map.add_color_point(make_rgb(76,110,127), 0);
-    map.add_color_point(make_rgb(136,197,228), 1);
+    ColorMap map(InterpolMode::RGB);
+    map.add_color_point(make_rgb(76,110,127), 0.);
+    map.add_color_point(make_rgb(136,197,228), 1.);
     return map;
   }
 
   const ColorMap ColorMap::BLUE_TUBE = make_blue_tube();
+  
+  ColorMap make_rainbow()
+  {
+    ColorMap map(InterpolMode::HSV);
+    for(int h = 300 ; h > 0 ; h-=10)
+      map.add_color_point(make_hsv(h,100,100), (300.-h)/300.);
+    return map;
+  }
+
+  const ColorMap ColorMap::RAINBOW = make_rainbow();
 }

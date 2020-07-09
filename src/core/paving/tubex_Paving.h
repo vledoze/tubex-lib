@@ -4,7 +4,7 @@
  * ----------------------------------------------------------------------------
  *  \date       2015
  *  \author     Simon Rohou
- *  \copyright  Copyright 2019 Simon Rohou
+ *  \copyright  Copyright 2020 Simon Rohou
  *  \license    This program is distributed under the terms of
  *              the GNU Lesser General Public License (LGPL).
  */
@@ -19,7 +19,7 @@ namespace tubex
 {
   /**
    * \class Paving
-   * \brief Multi-dimensional paving representation of a set
+   * \brief Multi-dimensional paving as representation of a set
    *
    * The paving is made of a set of multi-dimensional boxes.
    * The implementation of this paving is made as a binary tree.
@@ -37,7 +37,7 @@ namespace tubex
        * \param box n-dimensional box defining the paving
        * \param value integer of the set, `SetValue::VALUE_MAYBE` by default
        */
-      Paving(const ibex::IntervalVector& box, int value = VALUE_MAYBE);
+      Paving(const ibex::IntervalVector& box, SetValue value = SetValue::MAYBE);
 
       /**
        * \brief Paving destructor
@@ -97,7 +97,7 @@ namespace tubex
        * \param without_flag optional research mode: select the first leaf among non-flagged items only
        * \return a pointer to the Paving object
        */
-      Paving* get_first_leaf(int val, bool without_flag = false);
+      Paving* get_first_leaf(SetValue val, bool without_flag = false);
 
       /**
        * \brief Points to the first leaf of the paving structure
@@ -106,7 +106,7 @@ namespace tubex
        * \param without_flag optional research mode: select the first leaf among non-flagged items only
        * \return a const pointer to the Paving object
        */
-      const Paving* get_first_leaf(int val, bool without_flag = false) const;
+      const Paving* get_first_leaf(SetValue val, bool without_flag = false) const;
 
       /**
        * \brief Bisects this paving into two subpavings with some ratio bisection
@@ -158,20 +158,20 @@ namespace tubex
        * \param no_degenerated_intersection if `true`, then the objects for which the 
        *                                    intersection amounts to a point will not be returned
        */
-      void get_pavings_intersecting(int val,
+      void get_pavings_intersecting(SetValue val,
           const ibex::IntervalVector& box_to_intersect,
           std::vector<const Paving*>& v_subpavings,
           bool no_degenerated_intersection = false) const;
 
       /**
-       * \brief Returns the neighbours (adjacent items) of this Paving, having some value
+       * \brief Returns the neighbors (adjacent items) of this Paving, having some value
        *
        * \param v_neighbours the set of leaves to be returned
        * \param val optional value of the leaves we are looking for, `-1` for no restriction
        * \param without_flag optional research mode: select the leaves among non-flagged items only
        */
       void get_neighbours(std::vector<const Paving*>& v_neighbours,
-          int val = -1,  // -1 = all
+          SetValue val = SetValue::IN | SetValue::OUT | SetValue::MAYBE, // all by default
           bool without_flag = false) const;
 
       /**

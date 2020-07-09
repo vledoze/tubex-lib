@@ -3,7 +3,7 @@
  * ----------------------------------------------------------------------------
  *  \date       2018
  *  \author     Simon Rohou
- *  \copyright  Copyright 2019 Simon Rohou
+ *  \copyright  Copyright 2020 Simon Rohou
  *  \license    This program is distributed under the terms of
  *              the GNU Lesser General Public License (LGPL).
  */
@@ -15,8 +15,13 @@ using namespace ibex;
 
 namespace tubex
 {
-  bool DynamicalItem::valid_domain(const ibex::Interval& domain)
+  DynamicalItem::~DynamicalItem()
   {
-    return !domain.is_empty() && !domain.is_unbounded() && !domain.is_degenerated();
+
+  }
+  
+  bool DynamicalItem::valid_tdomain(const Interval& tdomain)
+  {
+    return !tdomain.is_empty() && !tdomain.is_unbounded() && !tdomain.is_degenerated();
   }
 }

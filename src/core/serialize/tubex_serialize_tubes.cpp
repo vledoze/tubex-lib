@@ -3,7 +3,7 @@
  * ----------------------------------------------------------------------------
  *  \date       2016
  *  \author     Simon Rohou
- *  \copyright  Copyright 2019 Simon Rohou
+ *  \copyright  Copyright 2020 Simon Rohou
  *  \license    This program is distributed under the terms of
  *              the GNU Lesser General Public License (LGPL).
  */
@@ -44,10 +44,10 @@ namespace tubex
         double lb;
         for(const Slice *s = tube.first_slice() ; s != NULL ; s = s->next_slice())
         {
-          lb = s->domain().lb();
+          lb = s->tdomain().lb();
           bin_file.write((const char*)&lb, sizeof(double));
         }
-        lb = tube.domain().ub();
+        lb = tube.tdomain().ub();
         bin_file.write((const char*)&lb, sizeof(double));
 
         // Codomains
@@ -96,12 +96,14 @@ namespace tubex
         // Creating slices
         double lb;
         bin_file.read((char*)&lb, sizeof(double));
+        Interval tube_tdomain(lb);
 
         Slice *prev_slice = NULL, *slice = NULL;
         for(int k = 0 ; k < slices_number ; k++)
         {
           double ub;
           bin_file.read((char*)&ub, sizeof(double));
+          tube_tdomain |= Interval(lb, ub);
 
           if(slice == NULL)
           {
@@ -133,6 +135,10 @@ namespace tubex
           deserialize_Interval(bin_file, slice_value);
           s->set(slice_value);
         }
+
+        // Domain
+        tube_tdomain |= lb;
+        tube->m_tdomain = tube_tdomain; // redundant information for fast access
 
         // Gates
         Interval gate;

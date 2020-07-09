@@ -1,9 +1,11 @@
-#include "tests.h"
 #include <cstdio>
+#include "catch_interval.hpp"
 #include "tubex_VIBesFigTube.h"
 #include "vibes.h"
 
-#define protected public     // Using #define so that we can access protected
+// Using #define so that we can access protected methods
+// of the class for tests purposes
+#define protected public
 #include "tubex_CtcDeriv.h"
 
 using namespace Catch;
@@ -24,7 +26,7 @@ TEST_CASE("CtcDeriv")
     x.set_input_gate(Interval(-1.,2.));
     x.set_output_gate(Interval(-2.,0.));
 
-    Slice v(x.domain(), Interval(-1.,1.));
+    Slice v(x.tdomain(), Interval(-1.,1.));
 
     CtcDeriv ctc;
     ctc.contract(x,v);
@@ -40,7 +42,7 @@ TEST_CASE("CtcDeriv")
     x.set_input_gate(Interval(-1.,3.));
     x.set_output_gate(Interval(-5.,0.5));
 
-    Slice v(x.domain(), Interval(-1.));
+    Slice v(x.tdomain(), Interval(-1.));
 
     CtcDeriv ctc;
     ctc.contract(x,v);
@@ -56,7 +58,7 @@ TEST_CASE("CtcDeriv")
     x.set_input_gate(Interval(1.,3.));
     x.set_output_gate(Interval(-4.,-3.));
 
-    Slice v(x.domain(), Interval(-1.,1.));
+    Slice v(x.tdomain(), Interval(-1.,1.));
 
     CtcDeriv ctc;
     ctc.contract(x,v);
@@ -76,7 +78,7 @@ TEST_CASE("CtcDeriv")
     x.set_input_gate(Interval(-1.,2.));
     x.set_output_gate(Interval(-2.,0.));
 
-    Slice v(x.domain(), Interval::EMPTY_SET);
+    Slice v(x.tdomain(), Interval::EMPTY_SET);
 
     CtcDeriv ctc;
     ctc.contract(x,v);
@@ -92,7 +94,7 @@ TEST_CASE("CtcDeriv")
     x.set_input_gate(Interval(-1.,2.));
     x.set_output_gate(Interval::EMPTY_SET);
 
-    Slice v(x.domain(), Interval(-1.,1.));
+    Slice v(x.tdomain(), Interval(-1.,1.));
 
     CtcDeriv ctc;
     ctc.contract(x,v);
@@ -105,7 +107,7 @@ TEST_CASE("CtcDeriv")
   SECTION("Test slice, unbounded slice")
   {
     Slice x(Interval(-1.,3.));
-    Slice v(x.domain(), Interval(0.,1.));
+    Slice v(x.tdomain(), Interval(0.,1.));
 
     CHECK(x.input_gate() == Interval::ALL_REALS);
     CHECK(x.output_gate() == Interval::ALL_REALS);
@@ -122,7 +124,7 @@ TEST_CASE("CtcDeriv")
   SECTION("Test slice, unbounded derivative (1)")
   {
     Slice x(Interval(-1.,3.));
-    Slice v(x.domain());
+    Slice v(x.tdomain());
 
     CHECK(x.input_gate() == Interval::ALL_REALS);
     CHECK(x.output_gate() == Interval::ALL_REALS);
@@ -141,7 +143,7 @@ TEST_CASE("CtcDeriv")
     Slice x(Interval(-1.,3.));
     x.set_input_gate(Interval(-1.,2.));
     x.set_output_gate(Interval(-2.,0.));
-    Slice v(x.domain(), Interval(NEG_INFINITY,1.));
+    Slice v(x.tdomain(), Interval(NEG_INFINITY,1.));
 
     CHECK(x.input_gate() == Interval(-1.,2.));
     CHECK(x.output_gate() == Interval(-2.,0.));
@@ -162,7 +164,7 @@ TEST_CASE("CtcDeriv")
     Slice x(Interval(-1.,3.));
     x.set_input_gate(Interval(-1.,2.));
     x.set_output_gate(Interval(-2.,0.));
-    Slice v(x.domain(), Interval(-1.,POS_INFINITY));
+    Slice v(x.tdomain(), Interval(-1.,POS_INFINITY));
 
     CHECK(x.input_gate() == Interval(-1.,2.));
     CHECK(x.output_gate() == Interval(-2.,0.));
@@ -187,7 +189,7 @@ TEST_CASE("CtcDeriv")
     CtcDeriv ctc;
 
     Tube tube_test_fwd(tube);
-    ctc.contract(tube_test_fwd, tubedot, FORWARD);
+    ctc.contract(tube_test_fwd, tubedot, TimePropag::FORWARD);
 
     Tube tube_test_fwdbwd(tube);
     ctc.contract(tube_test_fwdbwd, tubedot);
@@ -212,7 +214,7 @@ TEST_CASE("CtcDeriv")
     CtcDeriv ctc;
 
     Tube tube_test_bwd(tube);
-    ctc.contract(tube_test_bwd, tubedot, BACKWARD);
+    ctc.contract(tube_test_bwd, tubedot, TimePropag::BACKWARD);
 
     Tube tube_test_fwdbwd(tube);
     ctc.contract(tube_test_fwdbwd, tubedot);
@@ -367,7 +369,7 @@ TEST_CASE("CtcDeriv")
     Slice x(Interval(-1.,3.), Interval(-5.,3.));
     x.set_input_gate(Interval(-1.,3.));
     x.set_output_gate(Interval(-5.,0.5));
-    const Slice v(x.domain(), Interval(-1.));
+    const Slice v(x.tdomain(), Interval(-1.));
 
     CtcDeriv ctc;
     ctc.contract(x, v);
@@ -383,7 +385,7 @@ TEST_CASE("CtcDeriv")
     Slice x(Interval(-1.,3.), Interval(-5.,3.));
     x.set_input_gate(Interval(1.,3.));
     x.set_output_gate(Interval(-4.,-3.));
-    const Slice v(x.domain(), Interval(-1.,1.));
+    const Slice v(x.tdomain(), Interval(-1.,1.));
 
     CtcDeriv ctc;
     ctc.contract(x, v);

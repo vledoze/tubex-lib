@@ -3,7 +3,7 @@
  * ----------------------------------------------------------------------------
  *  \date       2015
  *  \author     Simon Rohou
- *  \copyright  Copyright 2019 Simon Rohou
+ *  \copyright  Copyright 2020 Simon Rohou
  *  \license    This program is distributed under the terms of
  *              the GNU Lesser General Public License (LGPL).
  */
@@ -20,72 +20,91 @@ namespace tubex
     \
     const Tube& Tube::f(const Interval& x) \
     { \
-      for(Slice *s = first_slice() ; s != NULL ; s = s->next_slice()) \
+      Slice *s = NULL; \
+      do \
       { \
-        Interval envelope = s->codomain(); \
-        Interval ingate = s->input_gate(); \
-        s->set_envelope(envelope.f(x)); \
-        s->set_input_gate(ingate.f(x)); \
-      } \
-      Slice *s = last_slice(); \
-      Interval outgate = s->output_gate(); \
-      s->set_output_gate(outgate.f(x)); \
+        if(s == NULL) /* first iteration */ \
+          s = first_slice(); \
+        else \
+          s = s->next_slice(); \
+        \
+        s->set_envelope(Interval(s->codomain()).f(x), false); \
+        s->set_input_gate(Interval(s->input_gate()).f(x), false); \
+        \
+      } while(s->next_slice() != NULL); \
+      \
+      s->set_output_gate(Interval(s->output_gate()).f(x), false); \
       return *this; \
     } \
     \
     const Tube& Tube::f(const Trajectory& x) \
     { \
-      assert(domain() == x.domain()); \
-      for(Slice *s = first_slice() ; s != NULL ; s = s->next_slice()) \
+      assert(tdomain() == x.tdomain()); \
+      \
+      Slice *s = NULL; \
+      do \
       { \
-        Interval envelope = s->codomain(); \
-        Interval ingate = s->input_gate(); \
-        s->set_envelope(envelope.f(x(s->domain()))); \
-        s->set_input_gate(ingate.f(x(Interval(s->domain().lb())))); \
-      } \
-      Slice *s = last_slice(); \
-      Interval outgate = s->output_gate(); \
-      s->set_output_gate(outgate.f(x(Interval(s->domain().ub())))); \
+        if(s == NULL) /* first iteration */ \
+          s = first_slice(); \
+        else \
+          s = s->next_slice(); \
+        \
+        s->set_envelope(Interval(s->codomain()).f(x(s->tdomain())), false); \
+        s->set_input_gate(Interval(s->input_gate()).f(x(Interval(s->tdomain().lb()))), false); \
+         \
+      } while(s->next_slice() != NULL); \
+      \
+      s->set_output_gate(Interval(s->output_gate()).f(x(Interval(s->tdomain().ub()))), false); \
       return *this; \
     } \
     \
     const Tube& Tube::f(const Tube& x) \
     { \
-      assert(domain() == x.domain()); \
+      assert(tdomain() == x.tdomain()); \
+      \
       if(Tube::same_slicing(*this, x)) /* faster */ \
       { \
-        Slice *s = first_slice(); \
-        const Slice *s_x = x.first_slice(); \
-        while(s != NULL) \
+        Slice *s = NULL; \
+        const Slice *s_x = NULL; \
+        do \
         { \
-          Interval envelope = s->codomain(); \
-          Interval ingate = s->input_gate(); \
-          s->set_envelope(envelope.f(s_x->codomain())); \
-          s->set_input_gate(ingate.f(s_x->input_gate())); \
-          s = s->next_slice(); \
-          s_x = s_x->next_slice(); \
-        } \
-        s = last_slice(); \
-        Interval outgate = s->output_gate(); \
-        s->set_output_gate(outgate.f(x.last_slice()->output_gate())); \
+          if(s == NULL) /* first iteration */ \
+          { \
+            s = first_slice(); \
+            s_x = x.first_slice(); \
+          } \
+          \
+          else \
+          {  \
+            s = s->next_slice(); \
+            s_x = s_x->next_slice(); \
+          } \
+          \
+          s->set_envelope(Interval(s->codomain()).f(s_x->codomain()), false); \
+          s->set_input_gate(Interval(s->input_gate()).f(s_x->input_gate()), false); \
+        } while(s->next_slice() != NULL); \
+        \
+        s->set_output_gate(Interval(s->output_gate()).f((s_x->output_gate())), false); \
       } \
+      \
       else \
       { \
-        Slice *s = first_slice(); \
-        Interval s_domain; \
-        while(s != NULL) \
+        Slice *s = NULL; \
+        do \
         { \
-          s_domain = s->domain(); \
-          Interval envelope = s->codomain(); \
-          Interval ingate = s->input_gate(); \
-          s->set_envelope(envelope.f(x(s_domain))); \
-          s->set_input_gate(ingate.f(x(s_domain.lb()))); \
-          s = s->next_slice(); \
-        } \
-        s = last_slice(); \
-        Interval outgate = s->output_gate(); \
-        s->set_output_gate(outgate.f(x(s_domain.ub()))); \
+          if(s == NULL) /* first iteration */ \
+            s = first_slice(); \
+          else \
+            s = s->next_slice(); \
+          \
+          s->set_envelope(Interval(s->codomain()).f(x(s->tdomain())), false); \
+          s->set_input_gate(Interval(s->input_gate()).f(x(s->tdomain().lb())), false); \
+          \
+        } while(s->next_slice() != NULL); \
+        \
+        s->set_output_gate(Interval(s->output_gate()).f(x(s->tdomain().ub())), false); \
       } \
+      \
       return *this; \
     } \
     \

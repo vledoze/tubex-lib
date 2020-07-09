@@ -1,10 +1,10 @@
-/** 
+/**
  *  \file
  *  VIBesFigMap class
  * ----------------------------------------------------------------------------
  *  \date       2015
  *  \author     Simon Rohou
- *  \copyright  Copyright 2019 Simon Rohou
+ *  \copyright  Copyright 2020 Simon Rohou
  *  \license    This program is distributed under the terms of
  *              the GNU Lesser General Public License (LGPL).
  */
@@ -15,11 +15,11 @@
 #include <map>
 #include <vector>
 
-#include "tubex_VIBesFig.h"
-#include "tubex_TubeVector.h"
-#include "tubex_TrajectoryVector.h"
-#include "tubex_Beacon.h"
-#include "tubex_ColorMap.h"
+#include <tubex_VIBesFig.h>
+#include <tubex_TubeVector.h>
+#include <tubex_TrajectoryVector.h>
+#include <tubex_Beacon.h>
+#include <tubex_ColorMap.h>
 
 namespace tubex
 {
@@ -27,7 +27,7 @@ namespace tubex
   #define TUBE_MAX_NB_DISPLAYED_SLICES  2000
 
   // HTML color codes:
-  #define DEFAULT_BEACON_COLOR          "#FF5D00[white]"
+  #define DEFAULT_BEACON_COLOR          "#D65A00[#FFB93C]"
   #define DEFAULT_TRAJMAP_COLOR         "#276279"
   #define DEFAULT_MAPBCKGRND_COLOR      "#d2d2d2[#d2d2d2]"
   #define DEFAULT_OBS_COLOR             "gray"
@@ -38,7 +38,7 @@ namespace tubex
    *        (tubes, trajectories, etc.) on a map.
    *
    * One figure is linked to some tube or trajectory pointers, so that
-   * any update on these objects can be easily displayed on the figure. 
+   * any update on these objects can be easily displayed on the figure.
    */
   class VIBesFigMap : public VIBesFig
   {
@@ -61,11 +61,11 @@ namespace tubex
 
       /**
        * \brief Restricts the display of the dynamical items to a part
-       *        of their temporal domain only
+       *        of their tdomain only
        *
        * \param restricted_tdomain subset of the temporal domain of the referenced items
        */
-      void set_restricted_tdomain(const ibex::Interval& restricted_tdomain);
+      void restrict_tdomain(const ibex::Interval& restricted_tdomain);
 
       /**
        * \brief Enables the display of previous versions of the tubes,
@@ -92,17 +92,17 @@ namespace tubex
        *
        * \param max the maximum number of slices
        */
-      void set_tube_max_nb_disp_slices(int max);
+      void set_tube_max_disp_slices(int max);
 
       /**
        * \brief Limits the number of points to be displayed for trajectories
        *
        * Note that this will be applied for trajectories defined
-       * from tubex::Function objects (discretization).
+       * from TFunction objects (discretization).
        *
        * \param max the maximum number of points
        */
-      void set_traj_max_nb_disp_points(int max);
+      void set_traj_max_disp_points(int max);
 
       /**
        * \brief Enables the smoothing of tubes
@@ -113,7 +113,7 @@ namespace tubex
        * \param smooth `true` for smooth display
        */
       void smooth_tube_drawing(bool smooth);
-      
+
       /// @}
       /// \name Handling tubes
       /// @{
@@ -150,7 +150,7 @@ namespace tubex
        * \param tube the const pointer to the TubeVector object for which the color will be set
        * \param colormap a ColorMap to draw this tube with time evolving colors
        * \param traj_colormap an optional const pointer to a Trajectory object in order to have a custom
-       *        color evolution instead of a linear time evolving color 
+       *        color evolution instead of a linear time evolving color
        */
       void set_tube_color(const TubeVector *tube, const ColorMap& colormap, const Trajectory *traj_colormap = NULL);
 
@@ -187,7 +187,7 @@ namespace tubex
       /**
        * \brief Adds a trajectory vector object (x,y,heading) to this figure
        *
-       * The heading information may be required for vehicle display. 
+       * The heading information may be required for vehicle display.
        * If not available, use the other add_trajectory method.
        *
        * \param traj a const pointer to a TrajectoryVector object to be displayed
@@ -221,7 +221,7 @@ namespace tubex
        * \param traj the const pointer to the TrajectoryVector object for which the color will be set
        * \param colormap a ColorMap to draw this trajectory with time evolving colors
        * \param traj_colormap an optional const pointer to a Trajectory object in order to have a custom
-       *        color evolution instead of a linear time evolving color 
+       *        color evolution instead of a linear time evolving color
        */
       void set_trajectory_color(const TrajectoryVector *traj, const ColorMap& colormap, const Trajectory *traj_colormap = NULL);
 
@@ -240,6 +240,23 @@ namespace tubex
       /// @}
       /// \name Handling robotics objects
       /// @{
+
+      /**
+       * \brief Draws a vehicle with a given pose
+       *
+       * \param pose vector (x,y[,heading]) describing robot's pose (2d or 3d)
+       * \param size optional robot size (-1 = size of main vehicle by default)
+       */
+      void draw_vehicle(const ibex::Vector& pose, float size = -1);
+
+      /**
+       * \brief Draws a vehicle with a given pose
+       *
+       * \param pose vector (x,y[,heading]) describing robot's pose (2d or 3d)
+       * \param params VIBes parameters related to the vehicle (for groups)
+       * \param size optional robot size (-1 = size of main vehicle by default)
+       */
+      void draw_vehicle(const ibex::Vector& pose, const vibes::Params& params, float size = -1);
 
       /**
        * \brief Draws a vehicle on top of its trajectory
@@ -269,6 +286,7 @@ namespace tubex
        * \param color optional color of the beacon
        */
       void add_beacon(const Beacon& beacon, const std::string& color = DEFAULT_BEACON_COLOR);
+      void add_beacon(const ibex::IntervalVector& beacon, const std::string& color = DEFAULT_BEACON_COLOR);
 
       /**
        * \brief Adds a Beacon object to the map with a specific width
@@ -278,11 +296,14 @@ namespace tubex
        * \param color optional color of the beacon
        */
       void add_beacon(const Beacon& beacon, double width, const std::string& color = DEFAULT_BEACON_COLOR);
+      void add_beacon(const ibex::Vector& beacon, double width, const std::string& color = DEFAULT_BEACON_COLOR);
 
       /**
        * \brief Adds a set of Beacon objects to the map
        *
        * The width of the displayed boxes is related to the uncertainty of the Beacon objects.
+       *
+       * \deprecated to be removed
        *
        * \param v_beacons a vector of const references to Beacon objects to be drawn
        * \param color optional color of the beacons
@@ -292,36 +313,83 @@ namespace tubex
       /**
        * \brief Adds a set of Beacon objects to the map with a specific width
        *
+       * \deprecated to be removed
+       *
        * \param v_beacons a vector of const references to Beacon objects to be drawn
        * \param width the real width of the squared beacons
        * \param color optional color of the beacons
        */
       void add_beacons(const std::vector<Beacon>& v_beacons, double width, const std::string& color = DEFAULT_BEACON_COLOR);
-      
+
       /**
-       * \brief Adds a range-and-bearing uncertain observation to the map
+       * \brief Adds a set of boxed landmarks to the map
+       *
+       * \param v_m a vector of boxes to be drawn
+       * \param color optional color of the beacons
+       */
+      void add_landmarks(const std::vector<ibex::IntervalVector>& v_m, const std::string& color = DEFAULT_BEACON_COLOR);
+
+      /**
+       * \brief Adds a set of landmarks to the map with a specific width
+       *
+       * \param v_m a vector of 2d positions of landmarks
+       * \param width the width of the squared beacons
+       * \param color optional color of the beacons
+       */
+      void add_landmarks(const std::vector<ibex::Vector>& v_m, double width, const std::string& color = DEFAULT_BEACON_COLOR);
+
+      /**
+       * \brief Adds a range-and-bearing uncertain observation to the map,
+       *        in a static context
+       *
+       * The observation is a 2d interval vector: (range,bearing).
+       * It is associated with the pose of a robot, from which the observation has been made.
+       *
+       * \param obs the 2d interval vector enclosing the measurement
+       * \param pose the related 3d Vector object representing the pose (x,y,heading)
+       * \param color optional color of the observation
+       */
+      void add_observation(const ibex::IntervalVector& obs, const ibex::Vector& pose, const std::string& color = DEFAULT_OBS_COLOR);
+
+      /**
+       * \brief Adds a set of range-and-bearing uncertain observations to the map,
+       *        in a static context
+       *
+       * The observation is a 2d interval vector: (range,bearing).
+       * It is associated with the pose of a robot, from which the observation has been made.
+       *
+       * \param v_obs a vector of 2d interval vectors enclosing the measurements
+       * \param pose the related 3d Vector object representing the pose (x,y,heading)
+       * \param color optional color of the observation
+       */
+      void add_observations(const std::vector<ibex::IntervalVector>& v_obs, const ibex::Vector& pose, const std::string& color = DEFAULT_OBS_COLOR);
+
+      /**
+       * \brief Adds a range-and-bearing uncertain observation to the map,
+       *        in a dynamic context
        *
        * The observation is a 3d interval vector: (time,range,bearing).
-       * It is associated to a trajectory, from which the observation has been made.
+       * It is associated with the trajectory of a robot, from which the observation has been made.
        *
        * \param obs the 3d interval vector enclosing the measurement
        * \param traj the const pointer to the related TrajectoryVector object
        * \param color optional color of the observation
        */
       void add_observation(const ibex::IntervalVector& obs, const TrajectoryVector *traj, const std::string& color = DEFAULT_OBS_COLOR);
-      
+
       /**
-       * \brief Adds a set of range-and-bearing uncertain observations to the map
+       * \brief Adds a set of range-and-bearing uncertain observations to the map,
+       *        in a dynamic context
        *
        * The observation is a 3d interval vector: (time,range,bearing).
-       * It is associated to a trajectory, from which the observation has been made.
+       * It is associated with the trajectory of a robot, from which the observation has been made.
        *
        * \param v_obs a vector of 3d interval vectors enclosing the measurements
        * \param traj the const pointer to the related TrajectoryVector object
        * \param color optional color of the observation
        */
       void add_observations(const std::vector<ibex::IntervalVector>& v_obs, const TrajectoryVector *traj, const std::string& color = DEFAULT_OBS_COLOR);
-  
+
       /// @}
 
     protected:
@@ -386,9 +454,24 @@ namespace tubex
 
       /**
        * \brief Draws a range-and-bearing uncertain observation on the map
+       *        in static situation
+       *
+       * The observation is a 2d interval vector: (range,bearing).
+       * It is associated with the pose of a robot, from which the observation has been made.
+       *
+       * \param obs the 2d interval vector enclosing the measurement
+       * \param pose the related 3d Vector object representing the pose (x,y,heading)
+       * \param color color of the observation
+       * \param params VIBes parameters related to the observation
+       */
+      void draw_observation(const ibex::IntervalVector& obs, const ibex::Vector& pose, const std::string& color, const vibes::Params& params);
+
+      /**
+       * \brief Draws a range-and-bearing uncertain observation on the map
+       *        in dynamic situation
        *
        * The observation is a 3d interval vector: (time,range,bearing).
-       * It is associated to a trajectory, from which the observation has been made.
+       * It is associated with the trajectory of a robot, from which the observation has been made.
        *
        * \param obs the 3d interval vector enclosing the measurement
        * \param traj the const pointer to the related TrajectoryVector object
@@ -396,6 +479,20 @@ namespace tubex
        * \param params VIBes parameters related to the observation
        */
       void draw_observation(const ibex::IntervalVector& obs, const TrajectoryVector *traj, const std::string& color, const vibes::Params& params);
+
+      /**
+       * \brief Returns actual or estimated heading related to some TrajectoryVector at t
+       *
+       * If one component of the traj object depicts the heading, then it is
+       * evaluated. Otherwise, some approximation is made around t in order
+       * to provide an estimate of the heading.
+       *
+       * \param t time input of evaluation
+       * \param traj the const pointer to the related TrajectoryVector object
+       * \return heading in radians
+       */
+      double heading(double t, const TrajectoryVector *traj) const;
+
 
     protected:
 
@@ -433,8 +530,8 @@ namespace tubex
       bool m_smooth_drawing = false; //!< if `true`, a smooth rendering of tubes will be done
       float m_robot_size = 5.5; //!< if `0`, no robot display
 
-      int m_tube_max_nb_disp_slices = TUBE_MAX_NB_DISPLAYED_SLICES; //!< limit for slices display
-      int m_traj_max_nb_disp_points = TRAJ_MAX_NB_DISPLAYED_POINTS; //!< limit for traj points display
+      unsigned int m_tube_max_nb_disp_slices = TUBE_MAX_NB_DISPLAYED_SLICES; //!< limit for slices display
+      unsigned int m_traj_max_nb_disp_points = TRAJ_MAX_NB_DISPLAYED_POINTS; //!< limit for traj points display
   };
 }
 

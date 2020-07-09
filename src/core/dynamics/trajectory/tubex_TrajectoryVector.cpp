@@ -3,7 +3,7 @@
  * ----------------------------------------------------------------------------
  *  \date       2018
  *  \author     Simon Rohou
- *  \copyright  Copyright 2019 Simon Rohou
+ *  \copyright  Copyright 2020 Simon Rohou
  *  \license    This program is distributed under the terms of
  *              the GNU Lesser General Public License (LGPL).
  */
@@ -31,21 +31,23 @@ namespace tubex
       assert(n > 0);
     }
 
-    TrajectoryVector::TrajectoryVector(const TrajectoryVector& traj)
-    {
-      *this = traj;
-    }
-
-    TrajectoryVector::TrajectoryVector(const Interval& domain, const tubex::Function& f)
+    TrajectoryVector::TrajectoryVector(const Interval& tdomain, const TFunction& f)
       : TrajectoryVector(f.image_dim())
     {
-      assert(valid_domain(domain));
+      assert(valid_tdomain(tdomain));
       assert(f.nb_vars() == 0 && "function's inputs must be limited to system variable");
       // todo: check thickness of f? (only thin functions should be allowed)
 
       // Setting values for each component
       for(int i = 0 ; i < size() ; i++)
-        (*this)[i] = Trajectory(domain, f[i]);
+        (*this)[i] = Trajectory(tdomain, f[i]);
+    }
+
+    TrajectoryVector::TrajectoryVector(const Interval& tdomain, const TFunction& f, double timestep)
+      : TrajectoryVector(tdomain, f)
+    {
+      assert(timestep > 0.);
+      sample(timestep);
     }
 
     TrajectoryVector::TrajectoryVector(const map<double,Vector>& map_values)
@@ -57,6 +59,36 @@ namespace tubex
              || size() == it_map->second.size()) && "vectors of map_values of different dimensions");
         set(it_map->second, it_map->first);
       }
+
+      // todo: optimize this by building Trajectory objects here directly?
+    }
+
+    TrajectoryVector::TrajectoryVector(const vector<map<double,double> >& v_map_values)
+      : TrajectoryVector(v_map_values.size())
+    {
+      assert(!v_map_values.empty());
+      for(int i = 0 ; i < size() ; i++)
+        (*this)[i] = Trajectory(v_map_values[i]);
+    }
+
+    TrajectoryVector::TrajectoryVector(int n, const Trajectory& x)
+      : TrajectoryVector(n)
+    {
+      assert(n > 0);
+      for(int i = 0 ; i < size() ; i++)
+        (*this)[i] = x;
+    }
+
+    TrajectoryVector::TrajectoryVector(initializer_list<Trajectory> list)
+      : TrajectoryVector(list.size())
+    {
+      assert(list.size() > 0);
+      std::copy(list.begin(), list.end(), m_v_trajs);
+    }
+
+    TrajectoryVector::TrajectoryVector(const TrajectoryVector& traj)
+    {
+      *this = traj;
     }
 
     TrajectoryVector::~TrajectoryVector()
@@ -128,12 +160,11 @@ namespace tubex
         (*this)[i + start_index] = subvec[i];
     }
 
-
     // Accessing values
 
-    const Interval TrajectoryVector::domain() const
+    const Interval TrajectoryVector::tdomain() const
     {
-      return (*this)[0].domain();
+      return (*this)[0].tdomain();
     }
 
     const IntervalVector TrajectoryVector::codomain() const
@@ -155,7 +186,7 @@ namespace tubex
 
     const Vector TrajectoryVector::operator()(double t) const
     {
-      assert(domain().contains(t));
+      assert(tdomain().contains(t));
       Vector v(size());
       for(int i = 0 ; i < size() ; i++)
         v[i] = (*this)[i](t);
@@ -164,10 +195,26 @@ namespace tubex
     
     const IntervalVector TrajectoryVector::operator()(const Interval& t) const
     {
-      assert(domain().is_superset(t));
+      assert(tdomain().is_superset(t));
       IntervalVector v(size());
       for(int i = 0 ; i < size() ; i++)
         v[i] = (*this)[i](t);
+      return v;
+    }
+    
+    const Vector TrajectoryVector::first_value() const
+    {
+      Vector v(size());
+      for(int i = 0 ; i < size() ; i++)
+        v[i] = (*this)[i].first_value();
+      return v;
+    }
+
+    const Vector TrajectoryVector::last_value() const
+    {
+      Vector v(size());
+      for(int i = 0 ; i < size() ; i++)
+        v[i] = (*this)[i].last_value();
       return v;
     }
     
@@ -216,24 +263,43 @@ namespace tubex
         (*this)[i].set(y[i], t);
     }
 
-    void TrajectoryVector::truncate_domain(const Interval& t)
+    TrajectoryVector& TrajectoryVector::truncate_tdomain(const Interval& t)
     {
-      assert(valid_domain(t));
-      assert(domain().is_superset(t));
+      assert(valid_tdomain(t));
+      assert(tdomain().is_superset(t));
       for(int i = 0 ; i < size() ; i++)
-        (*this)[i].truncate_domain(t);
+        if(!(*this)[i].not_defined())
+          (*this)[i].truncate_tdomain(t);
+      return *this;
     }
 
-    void TrajectoryVector::shift_domain(double shift_ref)
+    TrajectoryVector& TrajectoryVector::shift_tdomain(double shift_ref)
     {
       for(int i = 0 ; i < size() ; i++)
-        (*this)[i].shift_domain(shift_ref);
+        (*this)[i].shift_tdomain(shift_ref);
+      return *this;
     }
 
-    void TrajectoryVector::discretize(double dt)
+    TrajectoryVector& TrajectoryVector::sample(double dt)
     {
       for(int i = 0 ; i < size() ; i++)
-        (*this)[i].discretize(dt);
+        (*this)[i].sample(dt);
+      return *this;
+    }
+
+    TrajectoryVector& TrajectoryVector::sample(const Trajectory& x)
+    {
+      for(int i = 0 ; i < size() ; i++)
+        (*this)[i].sample(x);
+      return *this;
+    }
+
+    TrajectoryVector& TrajectoryVector::sample(const TrajectoryVector& x)
+    {
+      assert(size() == x.size());
+      for(int i = 0 ; i < size() ; i++)
+        (*this)[i].sample(x[i]);
+      return *this;
     }
     
     // Integration
@@ -276,7 +342,7 @@ namespace tubex
     std::ostream& operator<<(std::ostream& str, const TrajectoryVector& x)
     {
       str << "TrajectoryVector (dim " << x.size() << ") "
-          << x.domain() << "↦" << x.codomain() << flush;
+          << x.tdomain() << "↦" << x.codomain() << flush;
       return str;
     }
 

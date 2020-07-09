@@ -4,7 +4,7 @@
  * ----------------------------------------------------------------------------
  *  \date       2016
  *  \author     Simon Rohou
- *  \copyright  Copyright 2019 Simon Rohou
+ *  \copyright  Copyright 2020 Simon Rohou
  *  \license    This program is distributed under the terms of
  *              the GNU Lesser General Public License (LGPL).
  */
@@ -35,7 +35,7 @@ namespace tubex
    * \enum TubeColorType
    * \brief Defines a set of colors for tube display
    */
-  enum TubeColorType { FOREGROUND, BACKGROUND, SLICES, GATES, POLYGONS };
+  enum class TubeColorType { FOREGROUND, BACKGROUND, SLICES, GATES, POLYGONS };
 
   /**
    * \class VIBesFigTube
@@ -81,7 +81,7 @@ namespace tubex
       /**
        * \brief Set the position of the temporal cursor of this figure
        *
-       * \param t position on the temporal domain
+       * \param t position on the tdomain
        */
       void set_cursor(double t);
 
@@ -169,7 +169,7 @@ namespace tubex
        * \param color_type the `TubeColorType` key for which the value will be set
        * \param color the new color to be specified for the given type
        */
-      void set_tube_color(const Tube *tube, int color_type, const std::string& color);
+      void set_tube_color(const Tube *tube, TubeColorType color_type, const std::string& color);
 
       /**
        * \brief Reset the background of a given tube
@@ -244,6 +244,15 @@ namespace tubex
        * \param color a color to draw this trajectory
        */
       void set_trajectory_color(const Trajectory *traj, const std::string& color);
+      
+      /**
+       * \brief Sets points size for a given trajectory, and activates
+       *        a display mode with points instead of a line for this trajectory
+       *
+       * \param traj the const pointer to the Trajectory object for which the points size will be set
+       * \param points_size size of the points (if 0, the display is done with a line)
+       */
+      void set_trajectory_points_size(const Trajectory *traj, float points_size);
 
       /**
        * \brief Removes a trajectory from this figure
@@ -267,7 +276,7 @@ namespace tubex
        * \param tube the const pointer to the Tube object for which a group will be created
        * \param color_type the `TubeColorType` key related to the new group
        */
-      void create_group_color(const Tube *tube, int color_type);
+      void create_group_color(const Tube *tube, TubeColorType color_type);
 
       /**
        * \brief Creates all the VIBes groups related to the given tube
@@ -308,7 +317,7 @@ namespace tubex
        * \brief Draws a gate
        *
        * \param gate the codomain
-       * \param t the domain input
+       * \param t the tdomain input
        * \param params VIBes parameters related to the gate (for groups)
        */
       void draw_gate(const ibex::Interval& gate, double t, const vibes::Params& params);
@@ -317,10 +326,9 @@ namespace tubex
        * \brief Draws a trajectory
        *
        * \param traj the const pointer to the Trajectory object to be shown
-       * \param points_size optional display mode, for which the trajectory is not a line but a set of points of a given size
        * \return the box hull of the displayed object
        */
-      const ibex::IntervalVector draw_trajectory(const Trajectory *traj, float points_size = 0.);
+      const ibex::IntervalVector draw_trajectory(const Trajectory *traj);
 
     protected:
 
@@ -331,7 +339,7 @@ namespace tubex
       struct FigTubeParams
       {
         std::string name; //!< human readable identifier of the tube
-        std::map<int,std::string> m_colors; //!< map of colors `<TubeColorType,html_color_code>`
+        std::map<TubeColorType,std::string> m_colors; //!< map of colors `<TubeColorType,html_color_code>`
         const Tube *tube_copy = NULL; //!< to display previous values in background, before any new contraction
         const Tube *tube_derivative = NULL; //!< to display thinner envelopes (polygons) enclosed by the slices
       };
@@ -344,6 +352,7 @@ namespace tubex
       {
         std::string name; //!< human readable identifier of the trajectory
         std::string color; //!< color of the trajectory
+        float points_size = 0.; //!< size of points in specific display mode
       };
 
       std::map<const Tube*,FigTubeParams> m_map_tubes; //!< map of Tube objects to be displayed, together with parameters

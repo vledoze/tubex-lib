@@ -3,7 +3,7 @@
  * ----------------------------------------------------------------------------
  *  \date       2015
  *  \author     Simon Rohou
- *  \copyright  Copyright 2019 Simon Rohou
+ *  \copyright  Copyright 2020 Simon Rohou
  *  \license    This program is distributed under the terms of
  *              the GNU Lesser General Public License (LGPL).
  */
@@ -16,8 +16,8 @@ using namespace ibex;
 
 namespace tubex
 {
-  Set::Set(const IntervalVector& box, int value)
-    : m_box(box), m_value(value)
+  Set::Set(const IntervalVector& box, SetValue value)
+    : m_value(value), m_box(box)
   {
 
   }
@@ -27,9 +27,14 @@ namespace tubex
 
   }
 
-  int Set::value() const
+  SetValue Set::value() const
   {
     return m_value;
+  }
+  
+  int Set::size() const
+  {
+    return m_box.size();
   }
 
   const IntervalVector& Set::box() const
@@ -37,7 +42,7 @@ namespace tubex
     return m_box;
   }
 
-  void Set::set_value(int value)
+  void Set::set_value(SetValue value)
   {
     m_value = value;
   }

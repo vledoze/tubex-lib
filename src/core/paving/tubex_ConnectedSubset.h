@@ -4,7 +4,7 @@
  * ----------------------------------------------------------------------------
  *  \date       2018
  *  \author     Simon Rohou, Peter Franek
- *  \copyright  Copyright 2019 Simon Rohou
+ *  \copyright  Copyright 2020 Simon Rohou
  *  \license    This program is distributed under the terms of
  *              the GNU Lesser General Public License (LGPL).
  */
@@ -92,7 +92,7 @@ namespace tubex
        * \param value_out value of the items representing no-solution boxes in the paving
        * \return a vector of boxes
        */
-      std::vector<ibex::IntervalVector> get_boundary(int value_boundary = VALUE_MAYBE, int value_out = VALUE_OUT) const; // items of type k-1
+      std::vector<ibex::IntervalVector> get_boundary(SetValue value_boundary = SetValue::MAYBE, SetValue value_out = SetValue::OUT) const; // items of type k-1
 
       /// @}
       /// \name Methods related to topological degree
@@ -110,10 +110,10 @@ namespace tubex
        *     The International Journal of Robotics Research, 2018
        *
        * \note If this method returns `false`, it does not mean a zero cannot exist on this
-       *       subset. It only corresponds to a case of undecidablility.
+       *       subset. It only corresponds to a case of undecidability.
        *
        * \param f the inclusion function \f$[\mathbf{f}]:\mathbb{IR}^2\to\mathbb{IR}^2\f$
-       * \return `true` in case of at least one zero proven on this subset, `false` in case of undecidablility
+       * \return `true` in case of at least one zero proven on this subset, `false` in case of undecidability
        */
       bool zero_proven(ibex::IntervalVector (*f)(const ibex::IntervalVector& b));
 
@@ -136,7 +136,7 @@ namespace tubex
        *                  smaller boxes, thus reducing the pessimism of the Jacobian evaluation and thus
        *                  the chances of concluding about the number of zeros. This parameter is the
        *                  precision limit of this auto-refinement.
-       * \return the number of zeros, or -1 in case of undecidablility
+       * \return the number of zeros, or -1 in case of undecidability
        */
       int zeros_number(ibex::IntervalVector (*f)(const ibex::IntervalVector& b), ibex::IntervalMatrix (*Jf)(const ibex::IntervalVector& b), float precision);
 

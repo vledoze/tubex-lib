@@ -3,15 +3,11 @@
  * ----------------------------------------------------------------------------
  *  \date       2016
  *  \author     Simon Rohou
- *  \copyright  Copyright 2019 Simon Rohou
+ *  \copyright  Copyright 2020 Simon Rohou
  *  \license    This program is distributed under the terms of
  *              the GNU Lesser General Public License (LGPL).
  */
 
-#include <cstdio>
-#include <string>
-#include <iostream>
-#include <sstream>
 #include "tubex_Figure.h"
 
 // A real value to display unbounded slices:
@@ -59,6 +55,11 @@ namespace tubex
     return m_view_box;
   }
 
+  void Figure::reset_view_box()
+  {
+    m_view_box = IntervalVector(2, Interval::EMPTY_SET);
+  }
+
   void Figure::set_properties(int x, int y, int width, int height)
   {
     assert(x >= 0 && y >= 0 && width > 0 && height > 0);
@@ -66,24 +67,17 @@ namespace tubex
     m_width = width; m_height = height;
   }
 
-  string Figure::add_suffix(const string& name, int id)
-  {
-    ostringstream o;
-    o << name << "_" << id;
-    return o.str();
-  }
-
   double Figure::trunc_inf(double x)
   {
     return (x == POS_INFINITY ? BOUNDED_INFINITY : (x == NEG_INFINITY ? -BOUNDED_INFINITY : x));
   }
 
-  const Interval Figure::trunc_inf(const ibex::Interval& x)
+  const Interval Figure::trunc_inf(const Interval& x)
   {
     return Interval(trunc_inf(x.lb()), trunc_inf(x.ub()));
   }
 
-  const IntervalVector Figure::trunc_inf(const ibex::IntervalVector& x)
+  const IntervalVector Figure::trunc_inf(const IntervalVector& x)
   {
     IntervalVector trunc_x = x;
     for(int i = 0 ; i < trunc_x.size() ; i++)

@@ -4,7 +4,7 @@
  * ----------------------------------------------------------------------------
  *  \date       2019
  *  \author     Simon Rohou
- *  \copyright  Copyright 2019 Simon Rohou
+ *  \copyright  Copyright 2020 Simon Rohou
  *  \license    This program is distributed under the terms of
  *              the GNU Lesser General Public License (LGPL).
  */
@@ -18,11 +18,11 @@
 namespace tubex
 {
   /**
-   * \enum InterpolationMode
+   * \enum InterpolMode
    * \brief Defines in which color space (HSV, RGB) the
    *        color interpolation will be made.
    */
-  enum InterpolationMode { RGB, HSV };
+  enum class InterpolMode { RGB, HSV };
 
   /**
    * \class ColorMap
@@ -38,7 +38,7 @@ namespace tubex
        * \param interpol_mode mode defining in which color space the
        *        color interpolation will be made (RGB by default)
        */
-      ColorMap(int interpol_mode = InterpolationMode::RGB);
+      ColorMap(InterpolMode interpol_mode = InterpolMode::RGB);
 
       /**
        * \brief ColorMap destructor
@@ -68,6 +68,11 @@ namespace tubex
        * \param index key associated to the color (any float value)
        */
       void add_color_point(hsv color, float index);
+
+      /**
+       * \brief Reverses the keys of the color map
+       */
+      void reverse();
 
       /**
        * \brief Sets a constant opacity to all colors of the map
@@ -116,10 +121,11 @@ namespace tubex
       static const ColorMap HAXBY; //!< predefined HAXBY color map (mainly used for DEM)
       static const ColorMap DEFAULT; //!< a predefined default color map
       static const ColorMap BLUE_TUBE; //!< a predefined color map for tubes
+      static const ColorMap RAINBOW; //!< a predefined color map
 
     protected:
 
-      int m_interpol_mode = InterpolationMode::RGB; //!< interpolation mode
+      InterpolMode m_interpol_mode = InterpolMode::RGB; //!< interpolation mode
       std::map<float,rgb> m_colormap; //!< map of colors
   };
 }

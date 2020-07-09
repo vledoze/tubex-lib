@@ -3,7 +3,7 @@
  * ----------------------------------------------------------------------------
  *  \date       2016
  *  \author     Simon Rohou
- *  \copyright  Copyright 2019 Simon Rohou
+ *  \copyright  Copyright 2020 Simon Rohou
  *  \license    This program is distributed under the terms of
  *              the GNU Lesser General Public License (LGPL).
  */
@@ -22,11 +22,8 @@ namespace tubex
     if(!bin_file.is_open())
       throw Exception("serialize_Trajectory()", "ofstream& bin_file not open");
 
-    if(traj.function() != NULL)
+    if(traj.definition_type() == TrajDefnType::ANALYTIC_FNC)
       throw Exception("serialize_Trajectory()", "Fnc serialization not implemented");
-
-    if(traj.sampled_map().size() == 0)
-      throw Exception("serialize_Trajectory()", "trajectory not defined");
 
     // Version number for compliance purposes
     bin_file.write((const char*)&version_number, sizeof(short int));

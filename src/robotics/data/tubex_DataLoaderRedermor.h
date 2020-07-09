@@ -3,7 +3,7 @@
  * ----------------------------------------------------------------------------
  *  \date       2016
  *  \author     Simon Rohou
- *  \copyright  Copyright 2019 Simon Rohou
+ *  \copyright  Copyright 2020 Simon Rohou
  *  \license    This program is distributed under the terms of
  *              the GNU Lesser General Public License (LGPL).
  */
@@ -25,7 +25,7 @@ namespace tubex
       void load_data(TubeVector *&x,
                      TrajectoryVector *&truth,
                      float timestep = 1.,
-                     const ibex::Interval& domain = ibex::Interval::ALL_REALS);
+                     const ibex::Interval& tdomain = ibex::Interval::ALL_REALS);
       std::vector<Beacon> get_beacons() const;
       std::map<int,std::vector<ibex::IntervalVector> > get_observations() const;
 
