@@ -360,12 +360,13 @@ namespace tubex
         const Slice *last_s = NULL;
         for(const Slice *s = first_slice() ; s != NULL ; s = s->next_slice())
         {
-          if(t < s->tdomain().ub())
+          if ( (t >= (s->tdomain().lb())) && (t < (s->tdomain().ub())) )
             return s;
           last_s = s;
         }
 
         assert(last_s != NULL);
+        assert(last_s->tdomain().contains(t));
         return last_s;
       }
     }
@@ -1058,7 +1059,6 @@ namespace tubex
       assert(tdomain().contains(t));
 
       Slice *slice = first_slice();
-      int i = 0;
       while(slice != NULL)
       {
         if(slice->tdomain().contains(t))
@@ -1066,9 +1066,11 @@ namespace tubex
         Slice *next_slice = slice->next_slice();
         delete slice;
         slice = next_slice;
-        i++;
       }
       m_first_slice = slice;
+      m_tdomain = Interval(
+        m_first_slice->tdomain().lb(),
+        last_slice()->tdomain().ub());
       delete_synthesis_tree();
 
       // Creating new structure
@@ -1142,10 +1144,11 @@ namespace tubex
       assert(t != tdomain().lb() && t != tdomain().ub() && "cannot remove initial/final gates");
 
       Slice *s2 = slice(t);
-      assert(s2->tdomain().lb() == t && "the gate must already exist");
+      //assert(s2->tdomain().lb() >= t && "the gate must already exist");
       Slice *s1 = s2->prev_slice();
 
-      Slice::merge_slices(s1, s2);
+      if (s1 != NULL)
+        Slice::merge_slices(s1, s2);
     }
 
     // Bisection
